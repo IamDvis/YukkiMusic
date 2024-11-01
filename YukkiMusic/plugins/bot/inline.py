@@ -7,27 +7,117 @@
 #
 # All rights reserved.
 #
-
-
-from pyrogram.types import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    InlineQueryResultPhoto,
-)
+from telethon import events, Button
+from telethon.tl.types import InputWebDocument
 from youtubesearchpython.__future__ import VideosSearch
-
 from config import BANNED_USERS
 from YukkiMusic import app
-from YukkiMusic.utils.inlinequery import answer
+
+answer = [
+    lambda event: event.builder.article(
+        title="Pause Stream",
+        description="Pause the currently playing song on voice chat.",
+        thumb=InputWebDocument(
+            url="https://telegra.ph/file/c0a1c789def7b93f13745.png",
+            mime_type="image/png",
+            size=0,
+        ),
+        text="/pause",
+    ),
+    lambda event: event.builder.article(
+        title="Resume Stream",
+        description="Resume the paused song on voice chat.",
+        thumb=InputWebDocument(
+            url="https://telegra.ph/file/02d1b7f967ca11404455a.png",
+            mime_type="image/png",
+            size=0,
+        ),
+        text="/resume",
+    ),
+    lambda event: event.builder.article(
+        title="Mute Stream",
+        description="Mute the ongoing song on voice chat.",
+        thumb=InputWebDocument(
+            url="https://telegra.ph/file/66516f2976cb6d87e20f9.png",
+            mime_type="image/png",
+            size=0,
+        ),
+        text="/vcmute",
+    ),
+    lambda event: event.builder.article(
+        title="Unmute Stream",
+        description="Unmute the ongoing song on voice chat.",
+        thumb=InputWebDocument(
+            url="https://telegra.ph/file/3078794f9341ffd582e18.png",
+            mime_type="image/png",
+            size=0,
+        ),
+        text="/vcunmute",
+    ),
+    lambda event: event.builder.article(
+        title="Skip Stream",
+        description="Skip to the next track, or specify a track number with /skip [number].",
+        thumb=InputWebDocument(
+            url="https://telegra.ph/file/98b88e52bc625903c7a2f.png",
+            mime_type="image/png",
+            size=0,
+        ),
+        text="/skip",
+    ),
+    lambda event: event.builder.article(
+        title="End Stream",
+        description="Stop the currently playing song on group voice chat.",
+        thumb=InputWebDocument(
+            url="https://telegra.ph/file/d2eb03211baaba8838cc4.png",
+            mime_type="image/png",
+            size=0,
+        ),
+        text="/stop",
+    ),
+    lambda event: event.builder.article(
+        title="Shuffle Stream",
+        description="Shuffle the queued tracks list.",
+        thumb=InputWebDocument(
+            url="https://telegra.ph/file/7f6aac5c6e27d41a4a269.png",
+            mime_type="image/png",
+            size=0,
+        ),
+        text="/shuffle",
+    ),
+    lambda event: event.builder.article(
+        title="Seek Stream",
+        description="Seek the ongoing stream to a specific duration.",
+        thumb=InputWebDocument(
+            url="https://telegra.ph/file/cd25ec6f046aa8003cfee.png",
+            mime_type="image/png",
+            size=0,
+        ),
+        text="/seek 10",
+    ),
+    lambda event: event.builder.article(
+        title="Loop Stream",
+        description="Loop the currently playing music. Usage: /loop [enable|disable].",
+        thumb=InputWebDocument(
+            url="https://telegra.ph/file/081c20ce2074ea3e9b952.png",
+            mime_type="image/png",
+            size=0,
+        ),
+        text="/loop 3",
+    ),
+]
 
 
-@app.on_inline_query(~BANNED_USERS)
-async def inline_query_handler(client, query):
-    text = query.query.strip().lower()
+@app.on(events.InlineQuery)
+async def inline_query_handler(event):
+    if event.sender_id in BANNED_USERS:
+        return
+
+    text = event.text.strip().lower()
     answers = []
+
     if text.strip() == "":
         try:
-            await client.answer_inline_query(query.id, results=answer, cache_time=10)
+            await event.answer([a(event) for a in answer], cache_time=10)
         except:
             return
     else:
@@ -43,39 +133,29 @@ async def inline_query_handler(client, query):
             link = result[x]["link"]
             published = result[x]["publishedTime"]
             description = f"{views} | {duration} Mins | {channel}  | {published}"
-            buttons = InlineKeyboardMarkup(
-                [
-                    [
-                        InlineKeyboardButton(
-                            text="🎥 ᴡᴀᴛᴄʜ ᴏɴ ʏᴏᴜᴛᴜʙᴇ",
-                            url=link,
-                        )
-                    ],
-                ]
-            )
+            buttons = [[Button.url("🎥 Watch on YouTube", url=link)]]
             searched_text = f"""
-❇️**ᴛɪᴛʟᴇ:** [{title}]({link})
+❇️**Title:** [{title}]({link})
 
-⏳**ᴅᴜʀᴀᴛɪᴏɴ:** {duration} Mins
-👀**ᴠɪᴇᴡs:** `{views}`
-⏰**ᴘᴜʙʟɪsʜᴇᴅ ᴛɪᴍᴇ:** {published}
-🎥**ᴄʜᴀɴɴᴇʟ ɴᴀᴍᴇ:** {channel}
-📎**ᴄʜᴀɴɴᴇʟ ʟɪɴᴋ:** [ᴠɪsɪᴛ ғʀᴏᴍ ʜᴇʀᴇ]({channellink})
+⏳**Duration:** {duration} Mins
+👀**Views:** `{views}`
+⏰**Published Time:** {published}
+🎥**Channel Name:** {channel}
+📎**Channel Link:** [Visit from here]({channellink})
 
-__ʀᴇᴘʟʏ ᴡɪᴛʜ /play ᴏɴ ᴛʜɪs sᴇᴀʀᴄʜᴇᴅ ᴍᴇssᴀɢᴇ ᴛᴏ sᴛʀᴇᴀᴍ ɪᴛ ᴏɴ ᴠᴏɪᴄᴇᴄʜᴀᴛ.__
+__Reply with /play on this searched message to stream it on voice chat.__
 
-⚡️ ** ɪɴʟɪɴᴇ sᴇᴀʀᴄʜ ʙʏ {app.mention} **"""
+⚡️ ** Inline search by {app.name} **"""
             answers.append(
-                InlineQueryResultPhoto(
-                    photo_url=thumbnail,
+                event.builder.photo(
+                    file=thumbnail,
                     title=title,
-                    thumb_url=thumbnail,
                     description=description,
-                    caption=searched_text,
-                    reply_markup=buttons,
+                    text=searched_text,
+                    buttons=buttons,
                 )
             )
         try:
-            return await client.answer_inline_query(query.id, results=answers)
+            await event.answer(answers)
         except:
             return

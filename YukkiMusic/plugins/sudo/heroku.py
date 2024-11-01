@@ -26,14 +26,13 @@ from pyrogram.enums import ChatType
 
 import config
 from config import BANNED_USERS
-from strings import get_command, get_string
+from strings import get_command
 from YukkiMusic import app
 from YukkiMusic.core.call import Yukki
 from YukkiMusic.misc import HAPP, SUDOERS, XCB, db
 from YukkiMusic.utils.database import (
     get_active_chats,
     get_cmode,
-    get_lang,
     remove_active_chat,
     remove_active_video_chat,
 )

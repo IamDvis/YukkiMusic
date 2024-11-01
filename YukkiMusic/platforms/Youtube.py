@@ -14,8 +14,7 @@ import random
 import re
 from typing import Union
 
-from pyrogram.enums import MessageEntityType
-from pyrogram.types import Message
+from telethon.tl.types import MessageEntityUrl
 from youtubesearchpython.__future__ import VideosSearch
 from yt_dlp import YoutubeDL
 
@@ -33,27 +32,40 @@ def cookies():
     return f"""cookies/{str(cookie_txt_file).split("/")[-1]}"""
 
 
-def get_ytdl_options(ytdl_opts: Union[str, dict, list], commandline: bool = True) -> Union[str, dict, list]:
+def get_ytdl_options(
+    ytdl_opts: Union[str, dict, list], commandline: bool = True
+) -> Union[str, dict, list]:
     token_data = os.getenv("TOKEN_DATA")
-    
+
     if isinstance(ytdl_opts, list):
         if token_data:
-            ytdl_opts += ["--username" if commandline else "username", "oauth2", "--password" if commandline else "password", "''"]
+            ytdl_opts += [
+                "--username" if commandline else "username",
+                "oauth2",
+                "--password" if commandline else "password",
+                "''",
+            ]
         else:
             ytdl_opts += ["--cookies" if commandline else "cookiefile", cookies()]
-    
+
     elif isinstance(ytdl_opts, str):
         if token_data:
-            ytdl_opts += "--username oauth2 --password '' " if commandline else "username oauth2 password '' "
+            ytdl_opts += (
+                "--username oauth2 --password '' "
+                if commandline
+                else "username oauth2 password '' "
+            )
         else:
-            ytdl_opts += f"--cookies {cookies()}" if commandline else f"cookiefile {cookies()}"
-    
+            ytdl_opts += (
+                f"--cookies {cookies()}" if commandline else f"cookiefile {cookies()}"
+            )
+
     elif isinstance(ytdl_opts, dict):
         if token_data:
             ytdl_opts.update({"username": "oauth2", "password": ""})
         else:
             ytdl_opts["cookiefile"] = cookies()
-    
+
     return ytdl_opts
 
 
@@ -88,27 +100,28 @@ class YouTubeAPI:
         else:
             return False
 
-    async def url(self, message_1: Message) -> Union[str, None]:
-        messages = [message_1]
-        if message_1.reply_to_message:
-            messages.append(message_1.reply_to_message)
+    async def url(self, event) -> Union[str, None]:
+        messages = [event.message]
+        if event.message.reply_to:
+            messages.append(await event.message.get_reply_message())
+
         text = ""
         offset = None
         length = None
+
         for message in messages:
             if offset:
                 break
             if message.entities:
                 for entity in message.entities:
-                    if entity.type == MessageEntityType.URL:
-                        text = message.text or message.caption
+                    if isinstance(entity, MessageEntityUrl):
+                        text = message.message
                         offset, length = entity.offset, entity.length
                         break
-            elif message.caption_entities:
-                for entity in message.caption_entities:
-                    if entity.type == MessageEntityType.TEXT_LINK:
-                        return entity.url
-        if offset in (None,):
+            elif message.media and message.media.webpage:
+                return message.media.webpage.url
+
+        if offset is None:
             return None
         return text[offset : offset + length]
 
@@ -190,9 +203,9 @@ class YouTubeAPI:
             link = link.split("&")[0]
 
         cmd = (
-            f'yt-dlp -i --compat-options no-youtube-unavailable-videos '
+            f"yt-dlp -i --compat-options no-youtube-unavailable-videos "
             f'--get-id --flat-playlist --playlist-end {limit} --skip-download "{link}" '
-            f'2>/dev/null'
+            f"2>/dev/null"
         )
 
         playlist = await shell_cmd(cmd)
@@ -202,7 +215,6 @@ class YouTubeAPI:
         except:
             result = []
         return result
-
 
     async def track(self, link: str, videoid: Union[bool, str] = None):
         if videoid:
@@ -399,7 +411,7 @@ class YouTubeAPI:
                     link,
                 ]
                 command = get_ytdl_options(command)
-                
+
                 proc = await asyncio.create_subprocess_exec(
                     *command,
                     stdout=asyncio.subprocess.PIPE,

@@ -7,63 +7,61 @@
 #
 # All rights reserved.
 #
-from pyrogram.enums import ChatType
-
 from strings import get_string
 from YukkiMusic.misc import SUDOERS
 from YukkiMusic.utils.database import get_lang, is_commanddelete_on, is_maintenance
 
 
 def language(mystic):
-    async def wrapper(_, message, **kwargs):
+    async def wrapper(event):
         try:
-            language = await get_lang(message.chat.id)
+            language = await get_lang(event.chat_id)
             language = get_string(language)
         except:
             language = get_string("en")
         if not await is_maintenance():
-            if message.from_user.id not in SUDOERS:
-                if message.chat.type == ChatType.PRIVATE:
-                    return await message.reply_text(language["maint_4"])
+            if event.sender_id not in SUDOERS:
+                if event.is_private:
+                    return await event.reply(language["maint_4"])
                 return
-        if await is_commanddelete_on(message.chat.id):
+        if await is_commanddelete_on(event.chat_id):
             try:
-                await message.delete()
+                await event.delete()
             except:
                 pass
-        return await mystic(_, message, language)
+        return await mystic(_, event, language)
 
     return wrapper
 
 
 def languageCB(mystic):
-    async def wrapper(_, CallbackQuery, **kwargs):
+    async def wrapper(event):
         try:
-            language = await get_lang(CallbackQuery.message.chat.id)
+            language = await get_lang(event.chat_id)
             language = get_string(language)
         except:
             language = get_string("en")
         if not await is_maintenance():
-            if CallbackQuery.from_user.id not in SUDOERS:
-                if CallbackQuery.message.chat.type == ChatType.PRIVATE:
-                    return await CallbackQuery.answer(
+            if event.sender_id not in SUDOERS:
+                if event.is_private:
+                    return event.answer(
                         language["maint_4"],
-                        show_alert=True,
+                        alert=True,
                     )
                 return
 
-        return await mystic(_, CallbackQuery, language)
+        return await mystic(event, language)
 
     return wrapper
 
 
 def LanguageStart(mystic):
-    async def wrapper(_, message, **kwargs):
+    async def wrapper(event):
         try:
-            language = await get_lang(message.chat.id)
+            language = await get_lang(event.chat_id)
             language = get_string(language)
         except:
             language = get_string("en")
-        return await mystic(_, message, language)
+        return await mystic(event, language)
 
     return wrapper

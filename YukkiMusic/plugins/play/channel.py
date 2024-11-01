@@ -7,62 +7,79 @@
 #
 # All rights reserved.
 #
-
-from pyrogram import filters
-from pyrogram.enums import ChatMembersFilter, ChatMemberStatus, ChatType
-from pyrogram.types import Message
-
+from telethon.tl.types import ChannelParticipantsAdmins, Channel
 from config import BANNED_USERS
 from strings import get_command
 from YukkiMusic import app
 from YukkiMusic.utils.database import set_cmode
 from YukkiMusic.utils.decorators.admins import AdminActual
 
-### Multi-Lang Commands
 CHANNELPLAY_COMMAND = get_command("CHANNELPLAY_COMMAND")
 
 
-@app.on_message(filters.command(CHANNELPLAY_COMMAND) & filters.group & ~BANNED_USERS)
+@app.on_message(
+    command=CHANNELPLAY_COMMAND,
+    is_group=True,
+    from_user=BANNED_USERS,
+    is_restricted=True,
+)
 @AdminActual
-async def playmode_(client, message: Message, _):
-    if len(message.command) < 2:
-        return await message.reply_text(
-            _["cplay_1"].format(message.chat.title, CHANNELPLAY_COMMAND[0])
-        )
-    query = message.text.split(None, 2)[1].lower().strip()
-    if (str(query)).lower() == "disable":
-        await set_cmode(message.chat.id, None)
-        return await message.reply_text("Channel Play Disabled")
-    elif str(query) == "linked":
-        chat = await app.get_chat(message.chat.id)
-        if chat.linked_chat:
-            chat_id = chat.linked_chat.id
-            await set_cmode(message.chat.id, chat_id)
-            return await message.reply_text(
-                _["cplay_3"].format(chat.linked_chat.title, chat.linked_chat.id)
+async def playmode_(event, _):
+    message = event.message
+    if event.is_group:
+        if len(message.message.split()) < 2:
+            return await message.reply(
+                _["cplay_1"].format(event.chat.title, CHANNELPLAY_COMMAND[0])
             )
+
+        query = message.message.split(None, 2)[1].lower().strip()
+
+        if query == "disable":
+            await set_cmode(event.chat_id, None)
+            return await message.reply("Channel Play Disabled")
+
+        elif query == "linked":
+            chat = await app.get_entity(event.chat_id)
+            if chat.linked_chat_id:
+                linked_chat = await app.get_entity(chat.linked_chat_id)
+                await set_cmode(event.chat_id, linked_chat.id)
+                return await message.reply(
+                    _["cplay_3"].format(linked_chat.title, linked_chat.id)
+                )
+            else:
+                return await message.reply(_["cplay_2"])
+
         else:
-            return await message.reply_text(_["cplay_2"])
-    else:
-        try:
-            chat = await app.get_chat(query)
-        except:
-            return await message.reply_text(_["cplay_4"])
-        if chat.type != ChatType.CHANNEL:
-            return await message.reply_text(_["cplay_5"])
-        try:
-            admins = app.get_chat_members(
-                chat.id, filter=ChatMembersFilter.ADMINISTRATORS
+            try:
+                target_chat = await app.get_entity(query)
+            except:
+                return await message.reply(_["cplay_4"])
+
+            if not isinstance(target_chat, Channel):
+                return await message.reply(_["cplay_5"])
+
+            try:
+                creator_id = None
+                creator_username = None
+                async for user in app.iter_participants(
+                    target_chat.id, filter=ChannelParticipantsAdmins
+                ):
+                    if (
+                        user.participant.admin_rights
+                        and user.participant.admin_rights.is_creator
+                    ):
+                        creator_id = user.id
+                        creator_username = user.username
+                        break
+            except:
+                return await message.reply(_["cplay_4"])
+
+            if creator_id != event.sender_id:
+                return await message.reply(
+                    _["cplay_6"].format(target_chat.title, creator_username)
+                )
+
+            await set_cmode(event.chat_id, target_chat.id)
+            return await message.reply(
+                _["cplay_3"].format(target_chat.title, target_chat.id)
             )
-        except:
-            return await message.reply_text(_["cplay_4"])
-        async for users in admins:
-            if users.status == ChatMemberStatus.OWNER:
-                creatorusername = users.user.username
-                creatorid = users.user.id
-        if creatorid != message.from_user.id:
-            return await message.reply_text(
-                _["cplay_6"].format(chat.title, creatorusername)
-            )
-        await set_cmode(message.chat.id, chat.id)
-        return await message.reply_text(_["cplay_3"].format(chat.title, chat.id))

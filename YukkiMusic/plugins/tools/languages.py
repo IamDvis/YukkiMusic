@@ -7,86 +7,84 @@
 #
 # All rights reserved.
 #
-
+from telethon import events, Button
+from telethon.errors import FloodWait
 from pykeyboard import InlineKeyboard
-from pyrogram import filters
-from pyrogram.types import InlineKeyboardButton, Message
 
-from config import BANNED_USERS
 from strings import get_command, get_string, languages_present
 from YukkiMusic import app
 from YukkiMusic.utils.database import get_lang, set_lang
 from YukkiMusic.utils.decorators import ActualAdminCB, language, languageCB
 
-# Languages Available
 
-
-def lanuages_keyboard(_):
+def languages_keyboard(_):
     keyboard = InlineKeyboard(row_width=2)
     keyboard.add(
         *[
             (
-                InlineKeyboardButton(
+                Button.inline(
                     text=languages_present[i],
-                    callback_data=f"languages:{i}",
+                    data=f"languages:{i}",
                 )
             )
             for i in languages_present
         ]
     )
     keyboard.row(
-        InlineKeyboardButton(
+        Button.inline(
             text=_["BACK_BUTTON"],
-            callback_data=f"settingsback_helper",
+            data="settingsback_helper",
         ),
-        InlineKeyboardButton(text=_["CLOSE_BUTTON"], callback_data=f"close"),
+        Button.inline(text=_["CLOSE_BUTTON"], data="close"),
     )
     return keyboard
 
 
-LANGUAGE_COMMAND = get_command("LANGUAGE_COMMAND")
-
-
-@app.on_message(filters.command(LANGUAGE_COMMAND) & filters.group & ~BANNED_USERS)
+@app.on_message(
+    command=AUTH_COMMAND,
+    is_group=True,
+    from_user=get_command("LANGUAGE_COMMAND"),
+    is_restricted=True,
+)
 @language
-async def langs_command(client, message: Message, _):
-    keyboard = lanuages_keyboard(_)
-    await message.reply_text(
-        _["setting_1"].format(message.chat.title, message.chat.id),
-        reply_markup=keyboard,
+async def langs_command(event, _):
+    keyboard = languages_keyboard(_)
+    await event.reply(
+        _["setting_1"].format(event.chat.title, event.chat_id),
+        buttons=keyboard,
     )
 
 
-@app.on_callback_query(filters.regex("LG") & ~BANNED_USERS)
+@app.on(events.CallbackQuery(data="LG"))
 @languageCB
-async def lanuagecb(client, CallbackQuery, _):
+async def language_cb(event, _):
     try:
-        await CallbackQuery.answer()
-    except:
-        pass
-    keyboard = lanuages_keyboard(_)
-    return await CallbackQuery.edit_message_reply_markup(reply_markup=keyboard)
+        await event.answer()
+    except FloodWait as e:
+        await asyncio.sleep(e.seconds)
+    keyboard = languages_keyboard(_)
+    await event.edit(buttons=keyboard)
 
 
-@app.on_callback_query(filters.regex(r"languages:(.*?)") & ~BANNED_USERS)
+@app.on(events.CallbackQuery(data=r"languages:(.*?)"))
 @ActualAdminCB
-async def language_markup(client, CallbackQuery, _):
-    langauge = (CallbackQuery.data).split(":")[1]
-    old = await get_lang(CallbackQuery.message.chat.id)
-    if str(old) == str(langauge):
-        return await CallbackQuery.answer(
-            "You are already using same language", show_alert=True
+async def language_markup(event, _):
+    language_code = event.data.decode("utf-8").split(":")[1]
+    old_lang = await get_lang(event.chat_id)
+
+    if str(old_lang) == str(language_code):
+        return await event.answer(
+            "You are already using the selected language.", alert=True
         )
+
     try:
-        _ = get_string(langauge)
-        await CallbackQuery.answer(
-            "Your language changed successfully..", show_alert=True
-        )
+        _ = get_string(language_code)
+        await event.answer("Language changed successfully.", alert=True)
     except:
-        return await CallbackQuery.answer(
-            "Failed to change language or language in under Upadte",
-            show_alert=True,
+        return await event.answer(
+            "Failed to change language or language is under update.", alert=True
         )
-    await set_lang(CallbackQuery.message.chat.id, langauge)
-    keyboard = lanuages_keyboard(_)
-    return await CallbackQuery.edit_message_reply_markup(reply_markup=keyboard)
+
+    await set_lang(event.chat_id, language_code)
+    keyboard = languages_keyboard(_)
+    await event.edit(buttons=keyboard)

@@ -7,10 +7,6 @@
 #
 # All rights reserved.
 #
-
-from pyrogram import filters
-from pyrogram.types import Message
-
 from config import BANNED_USERS
 from YukkiMusic import app
 from YukkiMusic.core.call import Yukki
@@ -18,29 +14,45 @@ from YukkiMusic.utils.database import is_muted, mute_off, mute_on
 from YukkiMusic.utils.decorators import AdminRightsCheck
 
 
-@app.on_message(filters.command(["vcmute"]) & filters.group & ~BANNED_USERS)
+@app.on_message(
+    command="vcmute",
+    is_group=True,
+    from_user=BANNED_USERS,
+    is_restricted=True,
+)
 @AdminRightsCheck
-async def mute_admin(cli, message: Message, _, chat_id):
-    if not len(message.command) == 1 or message.reply_to_message:
-        return await message.reply_text(_["general_2"])
+async def mute_admin(event, _, chat_id):
+    if len(event.message.text.split()) != 1 or event.reply_to:
+        await event.reply(_["general_2"])
+        return
     if await is_muted(chat_id):
-        return await message.reply_text(_["admin_5"], disable_web_page_preview=True)
+        await event.reply(_["admin_5"], link_preview=False)
+        return
     await mute_on(chat_id)
     await Yukki.mute_stream(chat_id)
-    await message.reply_text(
-        _["admin_6"].format(message.from_user.mention), disable_web_page_preview=True
-    )
+
+    sender = await event.get_sender()
+    mention = f"[{sender.first_name}](tg://user?id={sender.id})"
+    await event.reply(_["admin_6"].format(mention), link_preview=False)
 
 
-@app.on_message(filters.command(["vcunmute"]) & filters.group & ~BANNED_USERS)
+@app.on_message(
+    command="vcunmute",
+    is_group=True,
+    from_user=BANNED_USERS,
+    is_restricted=True,
+)
 @AdminRightsCheck
-async def unmute_admin(Client, message: Message, _, chat_id):
-    if not len(message.command) == 1 or message.reply_to_message:
-        return await message.reply_text(_["general_2"])
+async def unmute_admin(event, _, chat_id):
+    if len(event.message.text.split()) != 1 or event.reply_to:
+        await event.reply(_["general_2"])
+        return
     if not await is_muted(chat_id):
-        return await message.reply_text(_["admin_7"], disable_web_page_preview=True)
+        await event.reply(_["admin_7"], link_preview=False)
+        return
     await mute_off(chat_id)
     await Yukki.unmute_stream(chat_id)
-    await message.reply_text(
-        _["admin_8"].format(message.from_user.mention), disable_web_page_preview=True
-    )
+
+    sender = await event.get_sender()
+    mention = f"[{sender.first_name}](tg://user?id={sender.id})"
+    await event.reply(_["admin_8"].format(mention), link_preview=False)

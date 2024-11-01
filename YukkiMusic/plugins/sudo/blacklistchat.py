@@ -7,69 +7,75 @@
 #
 # All rights reserved.
 #
-from pyrogram import filters
-from pyrogram.types import Message
-
+from telethon import events
 from config import BANNED_USERS
 from strings import get_command
-from YukkiMusic import app
-from YukkiMusic.misc import SUDOERS
+from YukkiMusic import app, SUDOERS
 from YukkiMusic.utils.database import blacklist_chat, blacklisted_chats, whitelist_chat
 from YukkiMusic.utils.decorators.language import language
 
 # Commands
-
 BLACKLISTCHAT_COMMAND = get_command("BLACKLISTCHAT_COMMAND")
 WHITELISTCHAT_COMMAND = get_command("WHITELISTCHAT_COMMAND")
 BLACKLISTEDCHAT_COMMAND = get_command("BLACKLISTEDCHAT_COMMAND")
 
 
-@app.on_message(filters.command(BLACKLISTCHAT_COMMAND) & SUDOERS)
+@app.on_message(command=BLACKLISTCHAT_COMMAND, from_user=SUDOERS)
 @language
-async def blacklist_chat_func(client, message: Message, _):
-    if len(message.command) != 2:
-        return await message.reply_text(_["black_1"])
-    chat_id = int(message.text.strip().split()[1])
+async def blacklist_chat_func(event, _):
+    args = event.message.text.split()
+    if len(args) != 2:
+        return await event.reply(_["black_1"])
+    
+    chat_id = int(args[1])
     if chat_id in await blacklisted_chats():
-        return await message.reply_text(_["black_2"])
+        return await event.reply(_["black_2"])
+    
     blacklisted = await blacklist_chat(chat_id)
     if blacklisted:
-        await message.reply_text(_["black_3"])
+        await event.reply(_["black_3"])
     else:
-        await message.reply_text("sᴏᴍᴇᴛʜɪɴɢ ᴡʀᴏɴɢ ʜᴀᴘᴘᴇɴᴇᴅ.")
+        await event.reply("Something went wrong.")
+    
     try:
         await app.leave_chat(chat_id)
     except:
         pass
 
 
-@app.on_message(filters.command(WHITELISTCHAT_COMMAND) & SUDOERS)
+@app.on_message(command=WHITELISTCHAT_COMMAND, from_user=SUDOERS)
 @language
-async def white_funciton(client, message: Message, _):
-    if len(message.command) != 2:
-        return await message.reply_text(_["black_4"])
-    chat_id = int(message.text.strip().split()[1])
+async def whitelist_chat_func(event, _):
+    args = event.message.text.split()
+    if len(args) != 2:
+        return await event.reply(_["black_4"])
+    
+    chat_id = int(args[1])
     if chat_id not in await blacklisted_chats():
-        return await message.reply_text(_["black_5"])
+        return await event.reply(_["black_5"])
+    
     whitelisted = await whitelist_chat(chat_id)
     if whitelisted:
-        return await message.reply_text(_["black_6"])
-    await message.reply_text("Something wrong happened")
+        await event.reply(_["black_6"])
+    else:
+        await event.reply("Something went wrong.")
 
 
-@app.on_message(filters.command(BLACKLISTEDCHAT_COMMAND) & ~BANNED_USERS)
+@app.on_message(command=BLACKLISTEDCHAT_COMMAND, from_user=BANNED_USERS, is_restricted=True)
 @language
-async def all_chats(client, message: Message, _):
+async def all_chats(event, _):
     text = _["black_7"]
     j = 0
     for count, chat_id in enumerate(await blacklisted_chats(), 1):
         try:
-            title = (await app.get_chat(chat_id)).title
+            chat = await app.get_entity(chat_id)
+            title = chat.title if chat.title else "Private"
         except Exception:
             title = "Private"
         j = 1
         text += f"**{count}. {title}** [`{chat_id}`]\n"
+    
     if j == 0:
-        await message.reply_text(_["black_8"])
+        await event.reply(_["black_8"])
     else:
-        await message.reply_text(text)
+        await event.reply(text)

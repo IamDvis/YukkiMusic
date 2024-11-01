@@ -11,7 +11,6 @@ import asyncio
 import time
 from datetime import datetime, timedelta
 
-from pyrogram.types import InlineKeyboardMarkup
 
 from strings import get_string
 from YukkiMusic.core.call import Yukki
@@ -180,9 +179,7 @@ async def markup_timer():
                     )
                 )
 
-                await mystic.edit_reply_markup(
-                    reply_markup=InlineKeyboardMarkup(buttons)
-                )
+                await mystic.edit(buttons=buttons)
 
             except Exception:
                 continue

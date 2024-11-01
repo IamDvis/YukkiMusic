@@ -13,23 +13,23 @@ from YukkiMusic import app
 from YukkiMusic.utils.database import get_cmode
 
 
-async def get_channeplayCB(_, command, CallbackQuery):
+async def get_channeplayCB(_, command, event):
     if command == "c":
-        chat_id = await get_cmode(CallbackQuery.message.chat.id)
+        chat_id = await get_cmode(event.chat_id)
         if chat_id is None:
             try:
-                return await CallbackQuery.answer(_["setting_12"], show_alert=True)
+                return await event.answer(_["setting_12"], show_alert=True)
             except:
                 return
         try:
-            chat = await app.get_chat(chat_id)
+            chat = await app.get_entity(chat_id)
             channel = chat.title
         except:
             try:
-                return await CallbackQuery.answer(_["cplay_4"], show_alert=True)
+                return await event.answer(_["cplay_4"], alert=True)
             except:
                 return
     else:
-        chat_id = CallbackQuery.message.chat.id
+        chat_id = event.chat_id
         channel = None
     return chat_id, channel

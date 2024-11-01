@@ -11,7 +11,6 @@ import sys
 from os import getenv
 
 from dotenv import load_dotenv
-from pyrogram import filters
 
 load_dotenv()
 
@@ -40,27 +39,6 @@ CLEANMODE_DELETE_MINS = int(
 DURATION_LIMIT_MIN = int(
     getenv("DURATION_LIMIT", "300")
 )  # Remember to give value in Minutes
-
-
-EXTRA_PLUGINS = getenv(
-    "EXTRA_PLUGINS",
-    "True",
-)
-
-# Fill True if you want to load extra plugins
-
-
-EXTRA_PLUGINS_REPO = getenv(
-    "EXTRA_PLUGINS_REPO",
-    "https://github.com/TheTeamVivek/Extra-Plugin",
-)
-# Fill here the external plugins repo where plugins that you want to load
-
-
-EXTRA_PLUGINS_FOLDER = getenv("EXTRA_PLUGINS_FOLDER", "plugins")
-
-# Your folder name in your extra plugins repo where all plugins stored
-
 
 # Duration Limit for downloading Songs in MP3 or MP4 format from bot
 SONG_DOWNLOAD_DURATION = int(
@@ -188,7 +166,7 @@ STRING_SESSIONS = list(map(str.strip, getenv("STRING_SESSIONS", None).split(",")
 
 
 ### DONT TOUCH or EDIT codes after this line
-BANNED_USERS = filters.user()
+BANNED_USERS = set()
 YTDOWNLOADER = 1
 LOG = 2
 LOG_FILE_NAME = "Yukkilogs.txt"

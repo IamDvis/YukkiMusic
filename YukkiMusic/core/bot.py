@@ -11,52 +11,59 @@ import uvloop
 
 uvloop.install()
 
-
+import re
 import sys
+from typing import List, Union
 
-from pyrogram import Client
-from pyrogram.enums import ChatMemberStatus
-from pyrogram.errors import (
-    ChatSendPhotosForbidden,
-    ChatWriteForbidden,
-    FloodWait,
-    MessageIdInvalid,
-)
-from pyrogram.types import (
-    BotCommand,
-    BotCommandScopeAllChatAdministrators,
-    BotCommandScopeAllGroupChats,
-    BotCommandScopeAllPrivateChats,
-)
+
+from telethon import events
+from telethon import TelegramClient
+
+from telethon.errors import ChatWriteForbiddenError
+from telethon.errors import FloodWaitError
+from telethon.errors import MessageIdInvalidError
+
+from telethon.tl.functions.bots import SetBotCommandsRequest
+from telethon.tl.functions.channels import GetParticipantRequest
+from telethon.tl.functions.channels import LeaveChannelRequest
+from telethon.tl.functions.messages import DeleteChatUserRequest
+from telethon.tl.functions.messages import ExportChatInviteRequest
+
+from telethon.tl.types import BotCommand
+from telethon.tl.types import BotCommandScopeUsers
+from telethon.tl.types import BotCommandScopeChats
+from telethon.tl.types import BotCommandScopeChatAdmins
+from telethon.tl.types import ChannelParticipant
+from telethon.tl.types import InputUserSelf
+from telethon.tl.types import PeerChannel
+from telethon.tl.types import PeerChat
+
 
 import config
 
 from ..logging import LOGGER
 
 
-class YukkiBot(Client):
+class YukkiBot(TelegramClient):
     def __init__(self):
         LOGGER(__name__).info(f"Starting Bot")
         super().__init__(
             "YukkiMusic",
             api_id=config.API_ID,
             api_hash=config.API_HASH,
-            bot_token=config.BOT_TOKEN,
-            in_memory=True,
-            sleep_threshold=240,
-            max_concurrent_transmissions=5,
-            workers=50,
+            flood_sleep_threshold=240,
+            parse_mode="markdown",
         )
 
-    async def edit_message_text(self, *args, **kwargs):
+    async def edit_message(self, *args, **kwargs):
         try:
-            return await super().edit_message_text(*args, **kwargs)
-        except FloodWait as e:
-            time = int(e.value)
+            return await super().edit_message(*args, **kwargs)
+        except FloodWaitError as e:
+            time = int(e.seconds)
             await asyncio.sleep(time)
             if time < 25:
                 return await self.edit_message_text(self, *args, **kwargs)
-        except MessageIdInvalid:
+        except MessageIdInvalidError:
             pass
 
     async def send_message(self, *args, **kwargs):
@@ -66,43 +73,37 @@ class YukkiBot(Client):
 
         try:
             return await super().send_message(*args, **kwargs)
-        except FloodWait as e:
-            time = int(e.value)
+        except FloodWaitError as e:
+            time = int(e.seconds)
             await asyncio.sleep(time)
             if time < 25:
                 return await self.send_message(self, *args, **kwargs)
-        except ChatWriteForbidden:
+        except ChatWriteForbiddenError:
             chat_id = kwargs.get("chat_id") or args[0]
             if chat_id:
                 await self.leave_chat(chat_id)
-                
 
-    async def send_photo(self, *args, **kwargs):
+    async def send_file(self, *args, **kwargs):
         try:
-            return await super().send_photo(*args, **kwargs)
-        except FloodWait as e:
-            time = int(e.value)
+            return await super().send_file(*args, **kwargs)
+        except FloodWaitError as e:
+            time = int(e.seconds)
             await asyncio.sleep(time)
             if time < 25:
-                return await self.send_photo(self, *args, **kwargs)
-        except ChatSendPhotosForbidden:
-            chat_id = kwargs.get("chat_id") or args[0]
-            if chat_id:
-                await self.send_message(chat_id, "I don't have the right to send photos in this chat, leaving now..")
-                await self.leave_chat(chat_id)
+                return await self.send_file(self, *args, **kwargs)
 
     async def start(self):
-        await super().start()
+        await super().start(bot_token=config.BOT_TOKEN)
         get_me = await self.get_me()
         self.username = get_me.username
         self.id = get_me.id
         self.name = self.me.first_name + " " + (self.me.last_name or "")
-        self.mention = self.me.mention
-
+        self.mention = f"[{self.name}](tg://user?id={self.id})"
         try:
             await self.send_message(
                 config.LOG_GROUP_ID,
                 text=f"<u><b>{self.mention} Bot Started :</b><u>\n\nId : <code>{self.id}</code>\nName : {self.name}\nUsername : @{self.username}",
+                parse_mode="html",
             )
         except:
             LOGGER(__name__).error(
@@ -111,55 +112,129 @@ class YukkiBot(Client):
             # sys.exit()
         if config.SET_CMDS == str(True):
             try:
-                await self.set_bot_commands(
-                    commands=[
-                        BotCommand("start", "Start the bot"),
-                        BotCommand("help", "Get the help menu"),
-                        BotCommand("ping", "Check if the bot is alive or dead"),
-                    ],
-                    scope=BotCommandScopeAllPrivateChats(),
+                await self(
+                    SetBotCommandsRequest(
+                        scope=BotCommandScopeUsers(),
+                        commands=[
+                            BotCommand("start", "Start the bot"),
+                            BotCommand("help", "Get the help menu"),
+                            BotCommand("ping", "Check if the bot is alive or dead"),
+                        ],
+                        lang_code="",
+                    )
                 )
-                await self.set_bot_commands(
-                    commands=[
-                        BotCommand("play", "Start playing requested song"),
-                    ],
-                    scope=BotCommandScopeAllGroupChats(),
+                await self(
+                    BotCommandScopeChats(
+                        commands=[
+                            BotCommand("play", "Start playing requested song"),
+                        ],
+                        lang_code="",
+                        scope=BotCommandScopeChats(),
+                    )
                 )
-                await self.set_bot_commands(
-                    commands=[
-                        BotCommand("play", "Start playing requested song"),
-                        BotCommand("skip", "Move to next track in queue"),
-                        BotCommand("pause", "Pause the current playing song"),
-                        BotCommand("resume", "Resume the paused song"),
-                        BotCommand("end", "Clear the queue and leave voicechat"),
-                        BotCommand("shuffle", "Randomly shuffles the queued playlist."),
-                        BotCommand(
-                            "playmode",
-                            "Allows you to change the default playmode for your chat",
-                        ),
-                        BotCommand(
-                            "settings",
-                            "Open the settings of the music bot for your chat.",
-                        ),
-                    ],
-                    scope=BotCommandScopeAllChatAdministrators(),
+                await self(
+                    BotCommandScopeChats(
+                        commands=[
+                            BotCommand("play", "Start playing requested song"),
+                            BotCommand("skip", "Move to next track in queue"),
+                            BotCommand("pause", "Pause the current playing song"),
+                            BotCommand("resume", "Resume the paused song"),
+                            BotCommand("end", "Clear the queue and leave voicechat"),
+                            BotCommand(
+                                "shuffle", "Randomly shuffles the queued playlist."
+                            ),
+                            BotCommand(
+                                "playmode",
+                                "Allows you to change the default playmode for your chat",
+                            ),
+                            BotCommand(
+                                "settings",
+                                "Open the settings of the music bot for your chat.",
+                            ),
+                        ],
+                        lang_code="",
+                        scope=BotCommandScopeChatAdmins(),
+                    )
                 )
             except:
                 pass
         else:
             pass
         try:
-            a = await self.get_chat_member(config.LOG_GROUP_ID, self.id)
-            if a.status != ChatMemberStatus.ADMINISTRATOR:
+            a = await self.get_permissions(config.LOG_GROUP_ID, self.id)
+            if not a.is_admin:
                 LOGGER(__name__).error("Please promote bot as admin in logger group")
                 sys.exit()
+        except ValueError:
+            LOGGER(__name__).error("Please promote bot as admin in logger group")
+            sys.exit()
         except Exception:
             pass
-        if get_me.last_name:
-            self.name = get_me.first_name + " " + get_me.last_name
-        else:
-            self.name = get_me.first_name
+
         LOGGER(__name__).info(f"MusicBot started as {self.name}")
 
-    async def stop(self):
-        await super().stop()
+    def on_message(
+        self,
+        command: Union[str, List[str]],
+        is_private: bool = None,
+        is_group: bool = None,
+        from_user: set = None,
+        is_restricted: bool = False,
+        incoming: bool = True,
+        outgoing: bool = None,
+    ):
+        ids = set() if ids is None else ids
+
+        if isinstance(command, str):
+            command = [command]
+
+        command = "|".join(command)
+        pattern = re.compile(rf"^[\/!]({command})(?:\s|$)", re.IGNORECASE)
+
+        def check_event(event):
+            in_ids = event.chat_id in from_user or event.sender_id in from_user
+            if is_restricted:
+                if in_ids:
+                    return False
+            else:
+                if not in_ids and from_user:
+                    return False
+            if is_private is None and is_group is None:
+                return True
+            if is_private and event.is_private:
+                return True
+            if is_group and event.is_group:
+                return True
+            return False
+
+        def decorator(func):
+            self.add_event_handler(
+                func,
+                events.NewMessage(
+                    pattern=pattern,
+                    incoming=incoming,
+                    outgoing=outgoing,
+                    func=check_event,
+                ),
+            )
+            return func
+
+        return decorator
+
+    async def get_participant(self, chat_id, user_id) -> ChannelParticipant:
+        result = await self(GetParticipantRequest(channel=chat_id, user_id=user_id))
+        return result.participant
+
+    async def export_invite_link(self, chat_id) -> str:
+        result = await self(ExportChatInviteRequest(chat_id))
+        return result.link
+
+    async def leave_chat(self, chat_id):
+        entity = await self.get_entity(chat_id)
+
+        if isinstance(entity, PeerChannel) or (
+            hasattr(entity, "megagroup") and entity.megagroup
+        ):
+            await self(LeaveChannelRequest(entity))
+        elif isinstance(entity, PeerChat) or hasattr(entity, "chat_id"):
+            await self(DeleteChatUserRequest(entity.id, InputUserSelf()))

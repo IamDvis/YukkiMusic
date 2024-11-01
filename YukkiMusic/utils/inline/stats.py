@@ -7,170 +7,157 @@
 #
 # All rights reserved.
 #
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-
+from telethon import Button
 from YukkiMusic import app
 
 
 def back_stats_markup(_):
-    upl = InlineKeyboardMarkup(
+    buttons = [
         [
-            [
-                InlineKeyboardButton(
-                    text=_["BACK_BUTTON"],
-                    callback_data="TOPMARKUPGET",
-                ),
-                InlineKeyboardButton(
-                    text=_["CLOSE_BUTTON"],
-                    callback_data="close",
-                ),
-            ],
-        ]
-    )
-    return upl
+            Button.inline(
+                text=_["BACK_BUTTON"],
+                data="TOPMARKUPGET",
+            ),
+            Button.inline(
+                text=_["CLOSE_BUTTON"],
+                data="close",
+            ),
+        ],
+    ]
+    return buttons
 
 
 def overallback_stats_markup(_):
-    upl = InlineKeyboardMarkup(
+    buttons = [
         [
-            [
-                InlineKeyboardButton(
-                    text=_["BACK_BUTTON"],
-                    callback_data="GlobalStats",
-                ),
-                InlineKeyboardButton(
-                    text=_["CLOSE_BUTTON"],
-                    callback_data="close",
-                ),
-            ],
-        ]
-    )
-    return upl
+            Button.inline(
+                text=_["BACK_BUTTON"],
+                data="GlobalStats",
+            ),
+            Button.inline(
+                text=_["CLOSE_BUTTON"],
+                data="close",
+            ),
+        ],
+    ]
+    return buttons
 
 
 def get_stats_markup(_, status):
     not_sudo = [
-        InlineKeyboardButton(
+        Button.inline(
             text=_["CLOSEMENU_BUTTON"],
-            callback_data="close",
+            data="close",
         )
     ]
     sudo = [
-        InlineKeyboardButton(
+        Button.inline(
             text=_["SA_B_8"],
-            callback_data="bot_stats_sudo g",
+            data="bot_stats_sudo g",
         ),
-        InlineKeyboardButton(
+        Button.inline(
             text=_["CLOSEMENU_BUTTON"],
-            callback_data="close",
+            data="close",
         ),
     ]
-    upl = InlineKeyboardMarkup(
+    buttons = [
         [
-            [
-                InlineKeyboardButton(
-                    text=_["SA_B_7"],
-                    callback_data="TOPMARKUPGET",
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text=_["SA_B_6"],
-                    url=f"https://t.me/{app.username}?start=stats",
-                ),
-                InlineKeyboardButton(
-                    text=_["SA_B_5"],
-                    callback_data="TopOverall g",
-                ),
-            ],
-            sudo if status else not_sudo,
-        ]
-    )
-    return upl
+            Button.inline(
+                text=_["SA_B_7"],
+                data="TOPMARKUPGET",
+            )
+        ],
+        [
+            Button.url(
+                text=_["SA_B_6"],
+                url=f"https://t.me/{app.username}?start=stats",
+            ),
+            Button.inline(
+                text=_["SA_B_5"],
+                data="TopOverall g",
+            ),
+        ],
+        sudo if status else not_sudo,
+    ]
+    return buttons
 
 
 def stats_buttons(_, status):
     not_sudo = [
-        InlineKeyboardButton(
+        Button.inline(
             text=_["SA_B_5"],
-            callback_data="TopOverall s",
+            data="TopOverall s",
         )
     ]
     sudo = [
-        InlineKeyboardButton(
+        Button.inline(
             text=_["SA_B_8"],
-            callback_data="bot_stats_sudo s",
+            data="bot_stats_sudo s",
         ),
-        InlineKeyboardButton(
+        Button.inline(
             text=_["SA_B_5"],
-            callback_data="TopOverall s",
+            data="TopOverall s",
         ),
     ]
-    upl = InlineKeyboardMarkup(
+    buttons = [
+        sudo if status else not_sudo,
         [
-            sudo if status else not_sudo,
-            [
-                InlineKeyboardButton(
-                    text=_["CLOSE_BUTTON"],
-                    callback_data="close",
-                ),
-            ],
-        ]
-    )
-    return upl
+            Button.inline(
+                text=_["CLOSE_BUTTON"],
+                data="close",
+            ),
+        ],
+    ]
+    return buttons
 
 
 def back_stats_buttons(_):
-    upl = InlineKeyboardMarkup(
+    buttons = [
         [
-            [
-                InlineKeyboardButton(
-                    text=_["BACK_BUTTON"],
-                    callback_data="GETSTATS",
-                ),
-                InlineKeyboardButton(
-                    text=_["CLOSE_BUTTON"],
-                    callback_data="close",
-                ),
-            ],
-        ]
-    )
-    return upl
+            Button.inline(
+                text=_["BACK_BUTTON"],
+                data="GETSTATS",
+            ),
+            Button.inline(
+                text=_["CLOSE_BUTTON"],
+                data="close",
+            ),
+        ],
+    ]
+    return buttons
 
 
 def top_ten_stats_markup(_):
-    upl = InlineKeyboardMarkup(
+    buttons = [
         [
-            [
-                InlineKeyboardButton(
-                    text=_["SA_B_2"],
-                    callback_data="GetStatsNow Tracks",
-                ),
-                InlineKeyboardButton(
-                    text=_["SA_B_1"],
-                    callback_data="GetStatsNow Chats",
-                ),
-            ],
-            [
-                InlineKeyboardButton(
-                    text=_["SA_B_3"],
-                    callback_data="GetStatsNow Users",
-                ),
-                InlineKeyboardButton(
-                    text=_["SA_B_4"],
-                    callback_data="GetStatsNow Here",
-                ),
-            ],
-            [
-                InlineKeyboardButton(
-                    text=_["BACK_BUTTON"],
-                    callback_data="GlobalStats",
-                ),
-                InlineKeyboardButton(
-                    text=_["CLOSE_BUTTON"],
-                    callback_data="close",
-                ),
-            ],
-        ]
-    )
-    return upl
+            Button.inline(
+                text=_["SA_B_2"],
+                data="GetStatsNow Tracks",
+            ),
+            Button.inline(
+                text=_["SA_B_1"],
+                data="GetStatsNow Chats",
+            ),
+        ],
+        [
+            Button.inline(
+                text=_["SA_B_3"],
+                data="GetStatsNow Users",
+            ),
+            Button.inline(
+                text=_["SA_B_4"],
+                data="GetStatsNow Here",
+            ),
+        ],
+        [
+            Button.inline(
+                text=_["BACK_BUTTON"],
+                data="GlobalStats",
+            ),
+            Button.inline(
+                text=_["CLOSE_BUTTON"],
+                data="close",
+            ),
+        ],
+    ]
+    return buttons

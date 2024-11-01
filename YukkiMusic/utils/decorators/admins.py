@@ -7,10 +7,12 @@
 #
 # All rights reserved.
 #
-import logging
-
-from pyrogram.enums import ChatMemberStatus, ChatType
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from telethon import Button
+from telethon.tl.types import (
+    User,
+    ChannelParticipantAdmin,
+    ChannelParticipantCreator,
+)
 
 from config import adminlist
 from strings import get_string
@@ -30,149 +32,150 @@ from ..formatters import int_to_alpha
 
 
 def AdminRightsCheck(mystic):
-    async def wrapper(client, message):
+    async def wrapper(event):
         if not await is_maintenance():
-            if message.from_user.id not in SUDOERS:
+            if event.sender_id not in SUDOERS:
                 return
-        if await is_commanddelete_on(message.chat.id):
+        if await is_commanddelete_on(event.chat_id):
             try:
-                await message.delete()
+                await event.delete()
             except:
                 pass
         try:
-            language = await get_lang(message.chat.id)
+            language = await get_lang(event.chat_id)
             _ = get_string(language)
         except:
             _ = get_string("en")
-        if message.sender_chat:
-            upl = InlineKeyboardMarkup(
+        sender = await event.get_sender()
+        if not isinstance(sender, User):
+            upl = [
                 [
-                    [
-                        InlineKeyboardButton(
-                            text="How to Fix this? ",
-                            callback_data="AnonymousAdmin",
-                        ),
-                    ]
+                    Button.inline(
+                        text="How to Fix this? ",
+                        data="AnonymousAdmin",
+                    ),
                 ]
-            )
-            return await message.reply_text(_["general_4"], reply_markup=upl)
-        if message.command[0][0] == "c":
-            chat_id = await get_cmode(message.chat.id)
+            ]
+            return await event.reply(_["general_4"], reply_markup=upl)
+        if event.raw_text.split()[0][0] == "c":
+            chat_id = await get_cmode(event.chat_id)
             if chat_id is None:
-                return await message.reply_text(_["setting_12"])
+                return await event.reply(_["setting_12"])
             try:
-                await app.get_chat(chat_id)
+                await app.get_entity(chat_id)
             except:
-                return await message.reply_text(_["cplay_4"])
+                return await event.reply(_["cplay_4"])
         else:
-            chat_id = message.chat.id
+            chat_id = event.chat_id
         if not await is_active_chat(chat_id):
-            return await message.reply_text(_["general_6"])
-        is_non_admin = await is_nonadmin_chat(message.chat.id)
+            return await event.reply(_["general_6"])
+        is_non_admin = await is_nonadmin_chat(event.chat_id)
         if not is_non_admin:
-            if message.from_user.id not in SUDOERS:
-                admins = adminlist.get(message.chat.id)
+            if event.sender_id not in SUDOERS:
+                admins = adminlist.get(event.chat_id)
                 if not admins:
-                    return await message.reply_text(_["admin_18"])
+                    return await event.reply(_["admin_18"])
                 else:
-                    if message.from_user.id not in admins:
-                        return await message.reply_text(_["admin_19"])
-        return await mystic(client, message, _, chat_id)
+                    if event.sender_id not in admins:
+                        return await event.reply(_["admin_19"])
+        return await mystic(event, _, chat_id)
 
     return wrapper
 
 
 def AdminActual(mystic):
-    async def wrapper(client, message):
+    async def wrapper(event):
         if not await is_maintenance():
-            if message.from_user.id not in SUDOERS:
+            if event.sender_id not in SUDOERS:
                 return
 
-        if await is_commanddelete_on(message.chat.id):
+        if await is_commanddelete_on(event.chat_id):
             try:
-                await message.delete()
+                await event.delete()
             except:
                 pass
 
         try:
-            language = await get_lang(message.chat.id)
+            language = await get_lang(event.chat_id)
             _ = get_string(language)
         except:
             _ = get_string("en")
 
-        if message.sender_chat:
-            upl = InlineKeyboardMarkup(
+        sender = await event.get_sender()
+        if not isinstance(sender, User):
+            upl = [
                 [
-                    [
-                        InlineKeyboardButton(
-                            text="How to Fix this?",
-                            callback_data="AnonymousAdmin",
-                        ),
-                    ]
+                    Button.inline(
+                        text="How to Fix this?",
+                        data="AnonymousAdmin",
+                    ),
                 ]
-            )
-            return await message.reply_text(_["general_4"], reply_markup=upl)
+            ]
 
-        if message.from_user.id not in SUDOERS:
+            return await event.reply(_["general_4"], reply_markup=upl)
+
+        if event.sender_id not in SUDOERS:
             try:
-                member = await client.get_chat_member(
-                    message.chat.id, message.from_user.id
-                )
-
-                if member.status != ChatMemberStatus.ADMINISTRATOR or (
-                    member.privileges is None or not member.privileges.can_manage_video_chats
+                member = await app.get_participant(event.chat_id, event.sender_id)
+                if (
+                    not isinstance(
+                        member, (ChannelParticipantAdmin, ChannelParticipantCreator)
+                    )
+                    or not member.admin_rights
+                    or not member.admin_rights.manage_call
                 ):
-                    return await message.reply(_["general_5"])
+
+                    return await event.reply(_["general_5"])
 
             except Exception as e:
-                return await message.reply(f"Error: {str(e)}")
+                return await event.reply(f"Error: {str(e)}")
 
-        return await mystic(client, message, _)
+        return await mystic(event, _)
 
     return wrapper
 
 
 def ActualAdminCB(mystic):
-    async def wrapper(client, CallbackQuery):
+    async def wrapper(event):
         try:
-            language = await get_lang(CallbackQuery.message.chat.id)
+            language = await get_lang(event.chat_id)
             _ = get_string(language)
         except:
             _ = get_string("en")
 
         if not await is_maintenance():
-            if CallbackQuery.from_user.id not in SUDOERS:
-                return await CallbackQuery.answer(
+            if event.sender_id not in SUDOERS:
+                return await event.answer(
                     _["maint_4"],
-                    show_alert=True,
+                    alert=True,
                 )
 
-        if CallbackQuery.message.chat.type == ChatType.PRIVATE:
-            return await mystic(client, CallbackQuery, _)
+        if event.is_private:
+            return await mystic(event, _)
 
-        is_non_admin = await is_nonadmin_chat(CallbackQuery.message.chat.id)
+        is_non_admin = await is_nonadmin_chat(event.chat_id)
         if not is_non_admin:
             try:
-                a = await app.get_chat_member(
-                    CallbackQuery.message.chat.id,
-                    CallbackQuery.from_user.id,
-                )
-
-                if a is None or (
-                    a.privileges is None or not a.privileges.can_manage_video_chats
+                member = await app.get_participant(event.chat_id, event.sender_id)
+                if (
+                    not isinstance(
+                        member, (ChannelParticipantAdmin, ChannelParticipantCreator)
+                    )
+                    or not member.admin_rights
+                    or not member.admin_rights.manage_call
                 ):
-                    if CallbackQuery.from_user.id not in SUDOERS:
-                        token = await int_to_alpha(CallbackQuery.from_user.id)
-                        _check = await get_authuser_names(CallbackQuery.from_user.id)
+                    if event.sender_id not in SUDOERS:
+                        token = await int_to_alpha(event.sender_id)
+                        _check = await get_authuser_names(event.sender_id)
                         if token not in _check:
-                            return await CallbackQuery.answer(
+                            return await event.answer(
                                 _["general_5"],
-                                show_alert=True,
+                                alert=True,
                             )
 
             except Exception as e:
-                return await CallbackQuery.answer(f"Error: {str(e)}")
+                return await event.answer(f"Error: {str(e)}")
 
-        return await mystic(client, CallbackQuery, _)
+        return await mystic(event, _)
 
     return wrapper

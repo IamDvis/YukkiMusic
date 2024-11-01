@@ -6,38 +6,41 @@
 # Please see < https://github.com/TheTeamVivek/YukkiMusic/blob/master/LICENSE >
 #
 # All rights reserved.
-
 from config import LOG, LOG_GROUP_ID
 from YukkiMusic import app
 from YukkiMusic.utils.database import is_on_off
 
 
-async def play_logs(message, streamtype):
+async def play_logs(event, streamtype):
     if await is_on_off(LOG):
-        if message.chat.username:
-            chatusername = f"@{message.chat.username}"
+        chat = await event.get_chat()
+        sender = await event.get_sender()
+
+        if chat.username:
+            chatusername = f"@{chat.username}"
         else:
-            chatusername = "ᴘʀɪᴠᴀᴛᴇ ɢʀᴏᴜᴘ"
+            chatusername = "Private Group"
 
         logger_text = f"""
-**{app.mention} ᴘʟᴀʏ ʟᴏɢ**
+**{app.mention} Play Log**
 
-**ᴄʜᴀᴛ ɪᴅ :** `{message.chat.id}`
-**ᴄʜᴀᴛ ɴᴀᴍᴇ :** {message.chat.title}
-**ᴄʜᴀᴛ ᴜsᴇʀɴᴀᴍᴇ :** {chatusername}
+**Chat ID:** `{chat.id}`
+**Chat Name:** {chat.title}
+**Chat Username:** {chatusername}
 
-**ᴜsᴇʀ ɪᴅ :** `{message.from_user.id}`
-**ɴᴀᴍᴇ :** {message.from_user.mention}
-**ᴜsᴇʀɴᴀᴍᴇ :** @{message.from_user.username}
+**User ID:** `{sender.id}`
+**Name:** {sender.first_name}
+**Username:** @{sender.username}
 
-**ǫᴜᴇʀʏ :** {message.text.split(None, 1)[1]}
-**sᴛʀᴇᴀᴍᴛʏᴘᴇ :** {streamtype}"""
-        if message.chat.id != LOG_GROUP_ID:
+**Query:** {event.raw_text.split(None, 1)[1]}
+**Stream Type:** {streamtype}"""
+
+        if chat.id != LOG_GROUP_ID:
             try:
                 await app.send_message(
-                    chat_id=LOG_GROUP_ID,
-                    text=logger_text,
-                    disable_web_page_preview=True,
+                    LOG_GROUP_ID,
+                    logger_text,
+                    link_preview=False,
                 )
             except Exception as e:
                 print(e)

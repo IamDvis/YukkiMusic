@@ -8,22 +8,12 @@
 # All rights reserved.
 #
 import asyncio
-
-from pyrogram import filters
-from pyrogram.enums import ChatMemberStatus
-from pyrogram.errors import ChatAdminRequired, UserNotParticipant
-from pyrogram.types import InlineKeyboardMarkup
-
+import re
+from telethon import events
 from config import BANNED_USERS
 from YukkiMusic import app
-from YukkiMusic.utils.database import (
-    get_assistant,
-    get_global_tops,
-    get_particulars,
-    get_userss,
-)
+from YukkiMusic.utils.database import get_global_tops, get_particulars, get_userss
 from YukkiMusic.utils.decorators import languageCB
-from YukkiMusic.utils.decorators.play import join_chat
 from YukkiMusic.utils.inline.playlist import (
     botplaylist_markup,
     failed_top_markup,
@@ -34,79 +24,63 @@ from YukkiMusic.utils.stream.stream import stream
 loop = asyncio.get_running_loop()
 
 
-@app.on_callback_query(filters.regex("get_playmarkup") & ~BANNED_USERS)
+def is_not_banned(event):
+    return event.sender_id not in BANNED_USERS
+
+
+@app.on(events.CallbackQuery(data=re.compile(b"get_playmarkup"), func=is_not_banned))
 @languageCB
-async def get_play_markup(client, CallbackQuery, _):
+async def get_play_markup(event, _):
     try:
-        await CallbackQuery.answer()
+        await event.answer()
     except:
         pass
     buttons = botplaylist_markup(_)
-    return await CallbackQuery.edit_message_reply_markup(
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
+    await event.edit(buttons=buttons)
 
 
-@app.on_callback_query(filters.regex("get_top_playlists") & ~BANNED_USERS)
+@app.on(events.CallbackQuery(data=re.compile(b"get_top_playlists"), func=is_not_banned))
 @languageCB
-async def get_topz_playlists(client, CallbackQuery, _):
+async def get_top_playlists(event, _):
     try:
-        await CallbackQuery.answer()
+        await event.answer()
     except:
         pass
     buttons = top_play_markup(_)
-    return await CallbackQuery.edit_message_reply_markup(
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
+    await event.edit(buttons=buttons)
 
 
-@app.on_callback_query(filters.regex("SERVERTOP") & ~BANNED_USERS)
+@app.on(events.CallbackQuery(data=re.compile(b"SERVERTOP (.+)"), func=is_not_banned))
 @languageCB
-async def server_to_play(client, CallbackQuery, _):
-    message = CallbackQuery.message
-    userbot = await get_assistant(CallbackQuery.message.chat.id)
-    try:
-        try:
-            get = await app.get_chat_member(CallbackQuery.message.chat.id, userbot.id)
-        except ChatAdminRequired:
-            return await myu.edit(
-                _["call_1"],
-                show_alert=True,
-            )
-        if get.status == ChatMemberStatus.BANNED:
-            try:
-                await app.unban_chat_member(chat_id, userbot.id)
-            except:
-                return await myu.edit(
-                    text=_["call_2"].format(userbot.username, userbot.id),
-                )
-    except UserNotParticipant:
-        myu = await message.reply_text("❣️")
-        await join_chat(message, message.chat.id, _, myu)
+async def server_to_play(event, _):
+    chat_id = event.chat_id
+    user_name = event.sender.first_name
 
-    chat_id = CallbackQuery.message.chat.id
-    user_name = CallbackQuery.from_user.first_name
     try:
-        await CallbackQuery.answer()
+        await event.answer()
     except:
         pass
-    callback_data = CallbackQuery.data.strip()
+
+    callback_data = event.data.decode("utf-8").strip()
     what = callback_data.split(None, 1)[1]
-    mystic = await CallbackQuery.edit_message_text(
+    mystic = await event.edit(
         _["tracks_1"].format(
             what,
-            CallbackQuery.from_user.first_name,
+            event.sender.first_name,
         )
     )
+
     upl = failed_top_markup(_)
+
     if what == "Global":
         stats = await get_global_tops()
     elif what == "Group":
         stats = await get_particulars(chat_id)
     elif what == "Personal":
-        stats = await get_userss(CallbackQuery.from_user.id)
+        stats = await get_userss(event.sender_id)
+
     if not stats:
-        return await mystic.edit(_["tracks_2"].format(what), reply_markup=upl)
+        return await mystic.edit(_["tracks_2"].format(what), buttons=upl)
 
     def get_stats():
         results = {}
@@ -121,7 +95,8 @@ async def server_to_play(client, CallbackQuery, _):
                 )
             )
         if not results:
-            return mystic.edit(_["tracks_2"].format(what), reply_markup=upl)
+            return mystic.edit(_["tracks_2"].format(what), buttons=upl)
+
         details = []
         limit = 0
         for vidid, count in list_arranged.items():
@@ -131,8 +106,9 @@ async def server_to_play(client, CallbackQuery, _):
                 break
             limit += 1
             details.append(vidid)
+
         if not details:
-            return mystic.edit(_["tracks_2"].format(what), reply_markup=upl)
+            return mystic.edit(_["tracks_2"].format(what), buttons=upl)
         return details
 
     try:
@@ -140,20 +116,22 @@ async def server_to_play(client, CallbackQuery, _):
     except Exception as e:
         print(e)
         return
+
     try:
         await stream(
             _,
             mystic,
-            CallbackQuery.from_user.id,
+            event.sender_id,
             details,
             chat_id,
             user_name,
-            CallbackQuery.message.chat.id,
+            event.chat_id,
             video=False,
             streamtype="playlist",
         )
     except Exception as e:
         ex_type = type(e).__name__
         err = e if ex_type == "AssistantErr" else _["general_3"].format(ex_type)
-        return await mystic.edit_text(err)
-    return await mystic.delete()
+        await mystic.edit(err)
+    else:
+        await mystic.delete()

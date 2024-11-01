@@ -8,9 +8,6 @@
 # All rights reserved.
 #
 
-from pyrogram import filters
-from pyrogram.types import Message
-
 from config import BANNED_USERS
 from strings import get_command
 from YukkiMusic import app
@@ -22,13 +19,20 @@ from YukkiMusic.utils.decorators import AdminRightsCheck
 PAUSE_COMMAND = get_command("PAUSE_COMMAND")
 
 
-@app.on_message(filters.command(PAUSE_COMMAND) & filters.group & ~BANNED_USERS)
+@app.on_message(
+    command=PAUSE_COMMAND,
+    is_group=True,
+    from_user=BANNED_USERS,
+    is_restricted=True,
+)
 @AdminRightsCheck
-async def pause_admin(cli, message: Message, _, chat_id):
-    if not len(message.command) == 1:
-        return await message.reply_text(_["general_2"])
+async def pause_admin(event, _, chat_id):
+    if not len(event.text.split()) == 1:
+        return await event.reply(_["general_2"])
     if not await is_music_playing(chat_id):
-        return await message.reply_text(_["admin_1"])
+        return await event.reply(_["admin_1"])
     await music_off(chat_id)
     await Yukki.pause_stream(chat_id)
-    await message.reply_text(_["admin_2"].format(message.from_user.mention))
+    sender = await event.get_sender()
+    mention = f"[{sender.first_name}](tg://user?id={sender.id})"
+    await event.reply(_["admin_2"].format(mention))

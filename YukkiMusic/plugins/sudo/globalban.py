@@ -108,7 +108,7 @@ async def gungabn(client, message: Message, _):
     number_of_chats = 0
     for chat_id in served_chats:
         try:
-            await app.unban_chat_member(chat_id, user_id)
+            await app.edit_permissions(chat_id, user_id)
             number_of_chats += 1
         except FloodWait as e:
             await asyncio.sleep(int(e.value))

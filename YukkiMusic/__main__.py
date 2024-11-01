@@ -9,7 +9,6 @@
 import importlib
 import sys
 
-from pyrogram import idle
 from pytgcalls.exceptions import NoActiveGroupCall
 
 import config
@@ -62,11 +61,13 @@ async def init():
 
     await Yukki.decorators()
     LOGGER("YukkiMusic").info("YukkiMusic Started Successfully")
-    await idle()
-    await app.stop()
-    await userbot.stop()
+    # await idle()
+    # await userbot.stop()
 
+
+loop = asyncio.get_event_loop_policy().get_event_loop()
+loop.run_until_complete(init())
 
 if __name__ == "__main__":
-    app.run(init())
+    app.run_until_disconnected()
     LOGGER("YukkiMusic").info("Stopping YukkiMusic! GoodBye")

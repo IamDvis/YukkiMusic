@@ -7,107 +7,104 @@
 #
 # All rights reserved.
 #
-
-from pyrogram import filters
-from pyrogram.types import Message
-
+from telethon import events
 from config import BANNED_USERS
-from strings import command, get_command
-from YukkiMusic import app
-from YukkiMusic.misc import SUDOERS
+from strings import get_command
+from YukkiMusic import app, SUDOERS
 from YukkiMusic.utils.database import add_gban_user, remove_gban_user
 from YukkiMusic.utils.decorators.language import language
 
-# Command
+# Commands
 BLOCK_COMMAND = get_command("BLOCK_COMMAND")
 UNBLOCK_COMMAND = get_command("UNBLOCK_COMMAND")
 BLOCKED_COMMAND = get_command("BLOCKED_COMMAND")
 
 
-@app.on_message(filters.command(BLOCK_COMMAND) & SUDOERS)
+@app.on_message(command=BLOCK_COMMAND, from_user=SUDOERS)
 @language
-async def useradd(client, message: Message, _):
-    if not message.reply_to_message:
-        if len(message.command) != 2:
-            return await message.reply_text(_["general_1"])
-        user = message.text.split(None, 1)[1]
-        if "@" in user:
-            user = user.replace("@", "")
-        user = await app.get_users(user)
-        if user.id in BANNED_USERS:
-            return await message.reply_text(_["block_1"].format(user.mention))
-        await add_gban_user(user.id)
-        BANNED_USERS.add(user.id)
-        await message.reply_text(_["block_2"].format(user.mention))
+async def useradd(event, _):
+    if not event.is_reply:
+        args = event.message.text.split()
+        if len(args) != 2:
+            return await event.reply(_["general_1"])
+        
+        user = args[1].replace("@", "")
+        user_obj = await app.get_entity(user)
+        
+        mention = f"[{user_obj.first_name}](tg://user?id={user_obj.id})"
+        
+        if user_obj.id in BANNED_USERS:
+            return await event.reply(_["block_1"].format(mention))
+        
+        await add_gban_user(user_obj.id)
+        BANNED_USERS.add(user_obj.id)
+        await event.reply(_["block_2"].format(mention))
         return
-    if message.reply_to_message.from_user.id in BANNED_USERS:
-        return await message.reply_text(
-            _["block_1"].format(message.reply_to_message.from_user.mention)
-        )
-    await add_gban_user(message.reply_to_message.from_user.id)
-    BANNED_USERS.add(message.reply_to_message.from_user.id)
-    await message.reply_text(
-        _["block_2"].format(message.reply_to_message.from_user.mention)
-    )
+
+    replied_user = await event.get_reply_message()
+    replied_user_id = replied_user.sender_id
+    mention = f"[{replied_user.sender.first_name}](tg://user?id={replied_user_id})"
+
+    if replied_user_id in BANNED_USERS:
+        return await event.reply(_["block_1"].format(mention))
+    
+    await add_gban_user(replied_user_id)
+    BANNED_USERS.add(replied_user_id)
+    await event.reply(_["block_2"].format(mention))
 
 
-@app.on_message(filters.command(UNBLOCK_COMMAND) & SUDOERS)
+@app.on_message(command=UNBLOCK_COMMAND, from_user=SUDOERS)
 @language
-async def userdel(client, message: Message, _):
-    if not message.reply_to_message:
-        if len(message.command) != 2:
-            return await message.reply_text(_["general_1"])
-        user = message.text.split(None, 1)[1]
-        if "@" in user:
-            user = user.replace("@", "")
-        user = await app.get_users(user)
-        if user.id not in BANNED_USERS:
-            return await message.reply_text(_["block_3"])
-        await remove_gban_user(user.id)
-        BANNED_USERS.remove(user.id)
-        await message.reply_text(_["block_4"])
+async def userdel(event, _):
+    if not event.is_reply:
+        args = event.message.text.split()
+        if len(args) != 2:
+            return await event.reply(_["general_1"])
+        
+        user = args[1].replace("@", "")
+        user_obj = await app.get_entity(user)
+        
+        mention = f"[{user_obj.first_name}](tg://user?id={user_obj.id})"
+        
+        if user_obj.id not in BANNED_USERS:
+            return await event.reply(_["block_3"])
+        
+        await remove_gban_user(user_obj.id)
+        BANNED_USERS.remove(user_obj.id)
+        await event.reply(_["block_4"])
         return
-    user_id = message.reply_to_message.from_user.id
-    if user_id not in BANNED_USERS:
-        return await message.reply_text(_["block_3"])
-    await remove_gban_user(user_id)
-    BANNED_USERS.remove(user_id)
-    await message.reply_text(_["block_4"])
+
+    replied_user = await event.get_reply_message()
+    replied_user_id = replied_user.sender_id
+    mention = f"[{replied_user.sender.first_name}](tg://user?id={replied_user_id})"
+
+    if replied_user_id not in BANNED_USERS:
+        return await event.reply(_["block_3"])
+    
+    await remove_gban_user(replied_user_id)
+    BANNED_USERS.remove(replied_user_id)
+    await event.reply(_["block_4"])
 
 
-@app.on_message(filters.command(BLOCKED_COMMAND) & SUDOERS)
+@app.on_message(command=BLOCKED_COMMAND, from_user=SUDOERS)
 @language
-async def sudoers_list(client, message: Message, _):
+async def sudoers_list(event, _):
     if not BANNED_USERS:
-        return await message.reply_text(_["block_5"])
-    mystic = await message.reply_text(_["block_6"])
+        return await event.reply(_["block_5"])
+    
+    mystic = await event.reply(_["block_6"])
     msg = _["block_7"]
     count = 0
-    for users in BANNED_USERS:
+    for user_id in BANNED_USERS:
         try:
-            user = await app.get_users(users)
-            user = user.first_name if not user.mention else user.mention
+            user = await app.get_entity(user_id)
+            mention = f"[{user.first_name}](tg://user?id={user.id})"
             count += 1
         except Exception:
             continue
-        msg += f"{count}➤ {user}\n"
+        msg += f"{count} ➤ {mention}\n"
+    
     if count == 0:
-        return await mystic.edit_text(_["block_5"])
+        return await mystic.edit(_["block_5"])
     else:
-        return await mystic.edit_text(msg)
-
-
-__MODULE__ = "B-list"
-__HELP__ = f"""
-<b>✧ {command("BLACKLISTCHAT_COMMAND")}</b> [chat ID] - Blacklist any chat from using the Music Bot.
-<b>✧ {command("WHITELISTCHAT_COMMAND")}</b> [chat ID] - Whitelist any blacklisted chat from using the Music Bot.
-<b>✧ {command("BLACKLISTEDCHAT_COMMAND")}</b> - Check all blocked chats.
-
-<b>✧ {command("BLOCK_COMMAND")}</b> [Username or reply to a user] - Prevents a user from using bot commands.
-<b>✧ {command("UNBLOCK_COMMAND")}</b> [Username or reply to a user] - Remove a user from the bot's blocked list.
-<b>✧ {command("BLOCKED_COMMAND")}</b> - Check the list of blocked users.
-
-<b>✧ {command("GBAN_COMMAND")}</b> [Username or reply to a user] - Gban a user from all served chats and stop them from using your bot.
-<b>✧ {command("UNGBAN_COMMAND")}</b> [Username or reply to a user] - Remove a user from the bot's gban list and allow them to use your bot.
-<b>✧ {command("GBANNED_COMMAND")}</b> - Check the list of gban users.
-"""
+        await mystic.edit(msg)

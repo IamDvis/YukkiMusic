@@ -8,8 +8,7 @@
 # All rights reserved.
 #
 from typing import Union
-
-from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from telethon import Button
 
 
 def queue_markup(
@@ -22,51 +21,49 @@ def queue_markup(
 ):
     not_dur = [
         [
-            InlineKeyboardButton(
+            Button.inline(
                 text=_["QU_B_1"],
-                callback_data=f"GetQueued {CPLAY}|{videoid}",
+                data=f"GetQueued {CPLAY}|{videoid}",
             ),
-            InlineKeyboardButton(
+            Button.inline(
                 text=_["CLOSEMENU_BUTTON"],
-                callback_data="close",
+                data="close",
             ),
         ]
     ]
-    dur = [
+    dur_buttons = [
         [
-            InlineKeyboardButton(
+            Button.inline(
                 text=_["QU_B_2"].format(played, dur),
-                callback_data="GetTimer",
+                data="GetTimer",
             )
         ],
         [
-            InlineKeyboardButton(
+            Button.inline(
                 text=_["QU_B_1"],
-                callback_data=f"GetQueued {CPLAY}|{videoid}",
+                data=f"GetQueued {CPLAY}|{videoid}",
             ),
-            InlineKeyboardButton(
+            Button.inline(
                 text=_["CLOSEMENU_BUTTON"],
-                callback_data="close",
+                data="close",
             ),
         ],
     ]
-    upl = InlineKeyboardMarkup(not_dur if DURATION == "Unknown" else dur)
-    return upl
+    buttons = not_dur if DURATION == "Unknown" else dur_buttons
+    return buttons
 
 
 def queue_back_markup(_, CPLAY):
-    upl = InlineKeyboardMarkup(
+    buttons = [
         [
-            [
-                InlineKeyboardButton(
-                    text=_["BACK_BUTTON"],
-                    callback_data=f"queue_back_timer {CPLAY}",
-                ),
-                InlineKeyboardButton(
-                    text=_["CLOSE_BUTTON"],
-                    callback_data="close",
-                ),
-            ]
+            Button.inline(
+                text=_["BACK_BUTTON"],
+                data=f"queue_back_timer {CPLAY}",
+            ),
+            Button.inline(
+                text=_["CLOSE_BUTTON"],
+                data="close",
+            ),
         ]
-    )
-    return upl
+    ]
+    return buttons
