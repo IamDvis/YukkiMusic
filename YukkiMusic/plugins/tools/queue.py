@@ -43,11 +43,15 @@ def get_duration(playing):
     else:
         return "Inline"
 
-@app.on(events.NewMessage(pattern=f"^{QUEUE_COMMAND}"))
+@app.on_message(
+    command=QUEUE_COMMAND,
+    is_group=True,
+    from_user=BANNED_USERS,
+    is_restricted=True,
+)
+
 @language
 async def ping_com(event, _):
-    if event.sender_id in BANNED_USERS:
-        return
     message = event.message
     is_cplay = message.text.startswith("c")
     
