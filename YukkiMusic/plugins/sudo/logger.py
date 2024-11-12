@@ -8,8 +8,6 @@
 # All rights reserved.
 #
 
-from pyrogram import filters
-
 import config
 from strings import get_command
 from YukkiMusic import app
@@ -20,20 +18,23 @@ from YukkiMusic.utils.decorators.language import language
 # Commands
 LOGGER_COMMAND = get_command("LOGGER_COMMAND")
 
+@app.on_message(
+    command=LOGGER_COMMAND,
+    from_user=SUDOERS,
+)
 
-@app.on_message(filters.command(LOGGER_COMMAND) & SUDOERS)
 @language
-async def logger(client, message, _):
+async def logger(event, _):
     usage = _["log_1"]
-    if len(message.command) != 2:
-        return await message.reply_text(usage)
-    state = message.text.split(None, 1)[1].strip()
+    if len(event.text.split()) != 2:
+        return await event.reply(usage)
+    state = event.text.split(None, 1)[1].strip()
     state = state.lower()
     if state == "enable":
         await add_on(config.LOG)
-        await message.reply_text(_["log_2"])
+        await event.reply(_["log_2"])
     elif state == "disable":
         await add_off(config.LOG)
-        await message.reply_text(_["log_3"])
+        await event.reply(_["log_3"])
     else:
-        await message.reply_text(usage)
+        await event.reply(usage)
