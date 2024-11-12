@@ -7,10 +7,7 @@
 #
 # All rights reserved.
 #
-
-from pyrogram import filters
-from pyrogram.types import Message
-
+from telethon import events
 from config import BANNED_USERS, MONGO_DB_URI, OWNER_ID
 from strings import get_command
 from YukkiMusic import app
@@ -23,106 +20,120 @@ ADDSUDO_COMMAND = get_command("ADDSUDO_COMMAND")
 DELSUDO_COMMAND = get_command("DELSUDO_COMMAND")
 SUDOUSERS_COMMAND = get_command("SUDOUSERS_COMMAND")
 
-
-@app.on_message(filters.command(ADDSUDO_COMMAND) & filters.user(OWNER_ID))
+@app.on_message(
+    command=ADDSUDO_COMMAND,
+    from_user=SUDOERS,
+)
 @language
-async def useradd(client, message: Message, _):
+async def useradd(event, _):
+    if event.sender_id not in OWNER_ID:
+        return
     if MONGO_DB_URI is None:
-        return await message.reply_text(
+        return await event.reply(
             "**Due to privacy issues, You can't manage sudoers when you are on Yukki Database.\n\n Please fill Your MONGO_DB_URI in your vars to use this features**"
         )
-    if not message.reply_to_message:
-        if len(message.command) != 2:
-            return await message.reply_text(_["general_1"])
-        user = message.text.split(None, 1)[1]
+    if not event.is_reply:
+        if len(event.message.text.split()) != 2:
+            return await event.reply(_["general_1"])
+        user = event.message.text.split()[1]
         if "@" in user:
             user = user.replace("@", "")
-        user = await app.get_users(user)
+        user = await app.get_entity(user)
         if user.id in SUDOERS:
-            return await message.reply_text(_["sudo_1"].format(user.mention))
+            return await event.reply(_["sudo_1"].format(user.username))
         added = await add_sudo(user.id)
         if added:
             SUDOERS.add(user.id)
-            await message.reply_text(_["sudo_2"].format(user.mention))
+            await event.reply(_["sudo_2"].format(user.username))
         else:
-            await message.reply_text("Something wrong happened")
+            await event.reply("Something wrong happened")
         return
-    if message.reply_to_message.from_user.id in SUDOERS:
-        return await message.reply_text(
-            _["sudo_1"].format(message.reply_to_message.from_user.mention)
+    reply_user = await event.message.get_reply_message()
+    if reply_user.sender_id in SUDOERS:
+        return await event.reply(
+            _["sudo_1"].format(reply_user.sender.username)
         )
-    added = await add_sudo(message.reply_to_message.from_user.id)
+    added = await add_sudo(reply_user.sender_id)
     if added:
-        SUDOERS.add(message.reply_to_message.from_user.id)
-        await message.reply_text(
-            _["sudo_2"].format(message.reply_to_message.from_user.mention)
+        SUDOERS.add(reply_user.sender_id)
+        await event.reply(
+            _["sudo_2"].format(reply_user.sender.username)
         )
     else:
-        await message.reply_text("Something wrong happened")
+        await event.reply("Something wrong happened")
     return
 
-
-@app.on_message(filters.command(DELSUDO_COMMAND) & filters.user(OWNER_ID))
+@app.on_message(
+    command=DELSUDO_COMMAND,
+    from_user=SUDOERS,
+)
 @language
-async def userdel(client, message: Message, _):
+async def userdel(event, _):
+    if event.sender_id not in OWNER_ID:
+        return
     if MONGO_DB_URI is None:
-        return await message.reply_text(
+        return await event.reply(
             "**Due to privacy issues, You can't manage sudoers when you are on Yukki Database.\n\n Please fill Your MONGO_DB_URI in your vars to use this features**"
         )
-    if not message.reply_to_message:
-        if len(message.command) != 2:
-            return await message.reply_text(_["general_1"])
-        user = message.text.split(None, 1)[1]
+    if not event.is_reply:
+        if len(event.text.split()) != 2:
+            return await event.reply(_["general_1"])
+        user = event.text.split()[1]
         if "@" in user:
             user = user.replace("@", "")
-        user = await app.get_users(user)
+        user = await app.get_entity(user)
         if user.id not in SUDOERS:
-            return await message.reply_text(_["sudo_3"])
+            return await event.reply(_["sudo_3"])
         removed = await remove_sudo(user.id)
         if removed:
             SUDOERS.remove(user.id)
-            await message.reply_text(_["sudo_4"])
+            await event.reply(_["sudo_4"])
             return
-        await message.reply_text(f"Something wrong happened")
+        await event.reply(f"Something wrong happened")
         return
-    user_id = message.reply_to_message.from_user.id
+    reply_user = await event.message.get_reply_message()
+    user_id = reply_user.sender_id
     if user_id not in SUDOERS:
-        return await message.reply_text(_["sudo_3"])
+        return await event.reply(_["sudo_3"])
     removed = await remove_sudo(user_id)
     if removed:
         SUDOERS.remove(user_id)
-        await message.reply_text(_["sudo_4"])
+        await event.reply(_["sudo_4"])
         return
-    await message.reply_text(f"Something wrong happened")
+    await event.reply(f"Something wrong happened")
 
-
-@app.on_message(filters.command(SUDOUSERS_COMMAND) & ~BANNED_USERS)
+@app.on_message(
+    command=SUDOUSERS_COMMAND,
+    from_user=SUDOERS,
+)
 @language
-async def sudoers_list(client, message: Message, _):
+async def sudoers_list(event, _):
+    if event.sender_id in BANNED_USERS:
+        return
     text = _["sudo_5"]
     count = 0
     for x in OWNER_ID:
         try:
-            user = await app.get_users(x)
-            user = user.first_name if not user.mention else user.mention
+            user = await app.get_entity(x)
+            user_name = user.first_name if not user.username else user.username
             count += 1
+            text += f"{count}➤ {user_name}\n"
         except Exception:
             continue
-        text += f"{count}➤ {user}\n"
     smex = 0
     for user_id in SUDOERS:
         if user_id not in OWNER_ID:
             try:
-                user = await app.get_users(user_id)
-                user = user.first_name if not user.mention else user.mention
+                user = await app.get_entity(user_id)
+                user_name = user.first_name if not user.username else user.username
                 if smex == 0:
                     smex += 1
                     text += _["sudo_6"]
                 count += 1
-                text += f"{count}➤ {user} ({user_id})\n"
+                text += f"{count}➤ {user_name} ({user_id})\n"
             except Exception:
                 continue
     if not text:
-        await message.reply_text(_["sudo_7"])
+        await event.reply(_["sudo_7"])
     else:
-        await message.reply_text(text)
+        await event.reply(text)
