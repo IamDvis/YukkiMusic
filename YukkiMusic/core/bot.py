@@ -93,7 +93,7 @@ class YukkiBot(TelegramClient):
 
     async def start(self):
         await super().start(bot_token=config.BOT_TOKEN)
-        super().parse_mode = "markdown"
+        self.parse_mode = "markdown"
         get_me = await self.get_me()
         self.username = get_me.username
         self.id = get_me.id
