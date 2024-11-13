@@ -7,11 +7,13 @@
 #
 # All rights reserved.
 
-
 import sys
 import logging
 from loguru import logger
 from config import LOG_FILE_NAME
+from datetime import timedelta, timezone
+
+IST = timezone(timedelta(hours=5, minutes=30))
 
 logger.add(
     LOG_FILE_NAME,
@@ -19,11 +21,14 @@ logger.add(
     retention=10,
     level="INFO",
     format="{time:DD-MMM-YY HH:mm:ss} - {level} - {name} - {message}",
+    serialize=False,
+    tz=IST
 )
 logger.add(
     sys.stdout,
     level="INFO",
     format="{time:DD-MMM-YY HH:mm:ss} - {level} - {name} - {message}",
+    tz=IST
 )
 
 logging.getLogger("pyrogram").setLevel(logging.ERROR)
