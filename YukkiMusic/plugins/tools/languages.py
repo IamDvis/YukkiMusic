@@ -13,6 +13,7 @@ from pykeyboard import InlineKeyboard
 
 from strings import get_command, get_string, languages_present
 from YukkiMusic import app
+from config import BANNED_USERS
 from YukkiMusic.utils.database import get_lang, set_lang
 from YukkiMusic.utils.decorators import ActualAdminCB, language, languageCB
 
@@ -41,9 +42,9 @@ def languages_keyboard(_):
 
 
 @app.on_message(
-    command=AUTH_COMMAND,
+    command=get_command("LANGUAGE_COMMAND"),
     is_group=True,
-    from_user=get_command("LANGUAGE_COMMAND"),
+    from_user=BANNED_USERS,
     is_restricted=True,
 )
 @language
