@@ -21,11 +21,11 @@ logger.add(
     serialize=False,
 )
 
-logger.add(
+"""logger.add(
     sys.stdout,
     level="INFO",
     format="{time:YYYY-MM-DD HH:mm:ss} - {level} - {name} - {message}",
-)
+)"""
 
 logging.getLogger("pyrogram").setLevel(logging.ERROR)
 logging.getLogger("telethon").setLevel(logging.ERROR)
