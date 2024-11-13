@@ -8,7 +8,7 @@
 # All rights reserved.
 #
 from telethon import events, Button
-from telethon.errors import FloodWait
+from telethon.errors import FloodWaitError as FloodWait
 from pykeyboard import InlineKeyboard
 
 from strings import get_command, get_string, languages_present
