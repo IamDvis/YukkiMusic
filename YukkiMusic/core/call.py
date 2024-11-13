@@ -12,9 +12,9 @@ from typing import Union
 
 from ntgcalls import TelegramServerError
 
-from py-tgcalls import PyTgCalls, filters
-from py-tgcalls.exceptions import AlreadyJoinedError, NoActiveGroupCall
-from py-tgcalls.types import (
+from pytgcalls import PyTgCalls, filters
+from pytgcalls.exceptions import AlreadyJoinedError, NoActiveGroupCall
+from pytgcalls.types import (
     ChatUpdate,
     GroupCallConfig,
     MediaStream,
