@@ -15,7 +15,6 @@ pykeyboard
 pillow # Not used just for telethon image compression 
 py-tgcalls
 python-dotenv
-PyTgCrypto>=1.2.7
 pyyaml
 requests
 speedtest-cli
@@ -30,3 +29,4 @@ youtube-search-python
 yt-dlp
 git+https://github.com/KurimuzonAkuma/pyrogram@dev
 git+https://github.com/Vivekkumar-IN/yt-dlp-youtube-oauth2
+git+https://github.com/TelegramPlayGround/pyrogram-tgcrypto
