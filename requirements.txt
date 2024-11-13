@@ -1,4 +1,5 @@
 aiohttp
+aiologger
 beautifulsoup4
 cryptg
 dnspython
