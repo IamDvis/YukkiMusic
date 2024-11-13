@@ -12,10 +12,12 @@ import platform
 from sys import version as pyver
 
 import psutil
+
+from telethon import events
+from telethon.errors import MessageIdInvalidError
+
 from pyrogram import __version__ as pyrover
-from pyrogram import filters
-from pyrogram.errors import MessageIdInvalid
-from pyrogram.types import CallbackQuery, InputMediaPhoto, Message
+from telethon import __version__ as telever
 from pytgcalls.__version__ import __version__ as pytgver
 
 import config
@@ -52,21 +54,30 @@ GSTATS_COMMAND = get_command("GSTATS_COMMAND")
 STATS_COMMAND = get_command("STATS_COMMAND")
 
 
-@app.on_message(filters.command(STATS_COMMAND) & ~BANNED_USERS)
+@app.on_message(
+    command=STATS_COMMAND,
+    from_user=BANNED_USERS,
+    is_restricted=True,
+)
 @language
-async def stats_global(client, message: Message, _):
-    upl = stats_buttons(_, True if message.from_user.id in SUDOERS else False)
-    await message.reply_photo(
-        photo=config.STATS_IMG_URL,
-        caption=_["gstats_11"].format(app.mention),
-        reply_markup=upl,
+async def stats_global(event, _):
+    upl = stats_buttons(_, True if event.sender_id in SUDOERS else False)
+    await event.reply(
+        file=config.STATS_IMG_URL,
+        message=_["gstats_11"].format(app.mention),
+        buttons=upl,
     )
 
 
-@app.on_message(filters.command(GSTATS_COMMAND) & ~BANNED_USERS)
+@app.on_message(
+    command=GSTATS_COMMAND,
+    is_group=True,
+    from_user=BANNED_USERS,
+    is_restricted=True,
+)
 @language
-async def gstats_global(client, message: Message, _):
-    mystic = await message.reply_text(_["gstats_1"])
+async def gstats_global(event, _):
+    mystic = await event.reply(_["gstats_1"])
     stats = await get_global_tops()
     if not stats:
         await asyncio.sleep(1)
@@ -99,8 +110,7 @@ async def gstats_global(client, message: Message, _):
 
     try:
         videoid, co = await loop.run_in_executor(None, get_stats)
-    except Exception as e:
-        print(e)
+    except Exception:
         return
     (
         title,
@@ -111,30 +121,31 @@ async def gstats_global(client, message: Message, _):
     ) = await YouTube.details(videoid, True)
     title = title.title()
     final = f"Top played Tracks on  {app.mention}\n\n**Title:** {title}\n\nPlayed** {co} **times"
-    upl = get_stats_markup(_, True if message.from_user.id in SUDOERS else False)
-    await app.send_photo(
-        message.chat.id,
-        photo=thumbnail,
+    upl = get_stats_markup(_, True if event.sender_id in SUDOERS else False)
+    await app.send_file(
+        event.chat_id,
+        file=thumbnail,
         caption=final,
-        reply_markup=upl,
+        buttons=upl,
     )
     await mystic.delete()
 
 
-@app.on_callback_query(filters.regex("GetStatsNow") & ~BANNED_USERS)
+@app.on(events.CallbackQuery(pattern=r"GetStatsNow", func=lambda e: e.sender_id not in BANNED_USERS))
 @languageCB
-async def top_users_ten(client, CallbackQuery: CallbackQuery, _):
-    chat_id = CallbackQuery.message.chat.id
-    callback_data = CallbackQuery.data.strip()
+async def top_users_ten(event, _):
+    chat_id = event.chat_id
+    callback_data = event.data.decode('utf-8').strip()
     what = callback_data.split(None, 1)[1]
     upl = back_stats_markup(_)
     try:
-        await CallbackQuery.answer()
+        await event.answer()
     except:
         pass
-    mystic = await CallbackQuery.edit_message_text(
+    chat = await event.get_chat()
+    mystic = await event.edit(
         _["gstats_3"].format(
-            f"ᴏғ {CallbackQuery.message.chat.title}" if what == "Here" else what
+            f"of {chat.title}" if what == "Here" else what
         )
     )
     if what == "Tracks":
@@ -147,7 +158,7 @@ async def top_users_ten(client, CallbackQuery: CallbackQuery, _):
         stats = await get_particulars(chat_id)
     if not stats:
         await asyncio.sleep(1)
-        return await mystic.edit(_["gstats_2"], reply_markup=upl)
+        return await mystic.edit(_["gstats_2"], buttons=upl)
     queries = await get_queries()
 
     def get_stats():
@@ -163,7 +174,7 @@ async def top_users_ten(client, CallbackQuery: CallbackQuery, _):
                 )
             )
         if not results:
-            return mystic.edit(_["gstats_2"], reply_markup=upl)
+            return mystic.edit(_["gstats_2"], buttons=upl)
         msg = ""
         limit = 0
         total_count = 0
@@ -196,8 +207,7 @@ async def top_users_ten(client, CallbackQuery: CallbackQuery, _):
 
     try:
         msg, list_arranged = await loop.run_in_executor(None, get_stats)
-    except Exception as e:
-        print(e)
+    except Exception:
         return
     limit = 0
     if what in ["Users", "Chats"]:
@@ -206,9 +216,9 @@ async def top_users_ten(client, CallbackQuery: CallbackQuery, _):
                 break
             try:
                 extract = (
-                    (await app.get_users(items)).first_name
+                    (await app.get_entity(items)).first_name
                     if what == "Users"
-                    else (await app.get_chat(items)).title
+                    else (await app.get_entity(items)).title
                 )
                 if extract is None:
                     continue
@@ -223,29 +233,28 @@ async def top_users_ten(client, CallbackQuery: CallbackQuery, _):
             else _["gstats_6"].format(limit, app.mention)
         )
         msg = temp + msg
-    med = InputMediaPhoto(media=config.GLOBAL_IMG_URL, caption=msg)
     try:
-        await CallbackQuery.edit_message_media(media=med, reply_markup=upl)
-    except MessageIdInvalid:
-        await CallbackQuery.message.reply_photo(
-            photo=config.GLOBAL_IMG_URL, caption=msg, reply_markup=upl
+        await event.edit(file=config.GLOBAL_IMG_URL, message=msg, buttons=upl)
+    except MessageIdInvalidError:
+        await event.reply(
+            file=config.GLOBAL_IMG_URL, message=msg, buttons=upl
         )
 
 
-@app.on_callback_query(filters.regex("TopOverall") & ~BANNED_USERS)
+@app.on(events.CallbackQuery(pattern=r"TopOverall", func=lambda e: e.sender_id not in BANNED_USERS))
 @languageCB
-async def overall_stats(client, CallbackQuery, _):
-    callback_data = CallbackQuery.data.strip()
+async def overall_stats(event, _):
+    callback_data = event.data.decode('utf-8').strip()
     what = callback_data.split(None, 1)[1]
     if what != "s":
         upl = overallback_stats_markup(_)
     else:
         upl = back_stats_buttons(_)
     try:
-        await CallbackQuery.answer()
+        await event.answer()
     except:
         pass
-    await CallbackQuery.edit_message_text(_["gstats_8"])
+    await event.edit(_["gstats_8"])
     served_chats = len(await get_served_chats())
     served_users = len(await get_served_users())
     total_queries = await get_queries()
@@ -277,31 +286,30 @@ async def overall_stats(client, CallbackQuery, _):
 **Song Download Limit:** {song} ᴍɪɴs
 **Bot's Server Playlist Limit:** {playlist_limit}
 **Playlist Play Limit:** {fetch_playlist}"""
-    med = InputMediaPhoto(media=config.STATS_IMG_URL, caption=text)
     try:
-        await CallbackQuery.edit_message_media(media=med, reply_markup=upl)
-    except MessageIdInvalid:
-        await CallbackQuery.message.reply_photo(
-            photo=config.STATS_IMG_URL, caption=text, reply_markup=upl
+        await event.edit(file=config.STATS_IMG_URL, message=text, buttons=upl)
+    except MessageIdInvalidError:
+        await event.reply(
+            file=config.STATS_IMG_URL, message=text, buttons=upl
         )
 
 
-@app.on_callback_query(filters.regex("bot_stats_sudo"))
+@app.on(events.CallbackQuery(pattern=r"bot_stats_sudo"))
 @languageCB
-async def overall_stats(client, CallbackQuery, _):
-    if CallbackQuery.from_user.id not in SUDOERS:
-        return await CallbackQuery.answer("ᴏɴʟʏ ғᴏʀ sᴜᴅᴏ ᴜsᴇʀ's", show_alert=True)
-    callback_data = CallbackQuery.data.strip()
+async def overall_stats(event, _):
+    if event.sender_id not in SUDOERS:
+        return await event.answer("Only for sudoer's", alert=True)
+    callback_data = event.data.decode('utf-8').strip()
     what = callback_data.split(None, 1)[1]
     if what != "s":
         upl = overallback_stats_markup(_)
     else:
         upl = back_stats_buttons(_)
     try:
-        await CallbackQuery.answer()
+        await answer.answer()
     except:
         pass
-    await CallbackQuery.edit_message_text(_["gstats_8"])
+    await event.edit(_["gstats_8"])
     sc = platform.system()
     p_core = psutil.cpu_count(logical=False)
     t_core = psutil.cpu_count(logical=True)
@@ -345,6 +353,7 @@ async def overall_stats(client, CallbackQuery, _):
 **Cpu frequency:** {cpu_freq}
 
 **Python Version:** {pyver.split()[0]}
+**Telethon Version:** {telever}
 **Pyrogram Version:** {pyrover}
 **Py-tgcalls Version:** {pytgver}
 **Total Storage:** {total[:4]} ɢiʙ
@@ -361,70 +370,65 @@ async def overall_stats(client, CallbackQuery, _):
 **Total DB Keys:** {objects}
 **Total Bot Queries:** `{total_queries} `
     """
-    med = InputMediaPhoto(media=config.STATS_IMG_URL, caption=text)
     try:
-        await CallbackQuery.edit_message_media(media=med, reply_markup=upl)
-    except MessageIdInvalid:
-        await CallbackQuery.message.reply_photo(
-            photo=config.STATS_IMG_URL, caption=text, reply_markup=upl
+        await event.edit(file=config.STATS_IMG_URL, message=text, buttons=upl)
+    except MessageIdInvalidError:
+        await event.reply(
+            file=config.STATS_IMG_URL, message=text, buttons=upl
         )
-
-
-@app.on_callback_query(
-    filters.regex(pattern=r"^(TOPMARKUPGET|GETSTATS|GlobalStats)$") & ~BANNED_USERS
-)
+@app.on(events.CallbackQuery(pattern=r"^(TOPMARKUPGET|GETSTATS|GlobalStats)$", func=lambda e: e.sender_id not in BANNED_USERS))
 @languageCB
-async def back_buttons(client, CallbackQuery, _):
+async def back_buttons(event, _):
     try:
-        await CallbackQuery.answer()
+        await event.answer()
     except:
         pass
-    command = CallbackQuery.matches[0].group(1)
+    command = event.pattern_match.group(1)
     if command == "TOPMARKUPGET":
         upl = top_ten_stats_markup(_)
-        med = InputMediaPhoto(
-            media=config.GLOBAL_IMG_URL,
-            caption=_["gstats_9"],
-        )
         try:
-            await CallbackQuery.edit_message_media(media=med, reply_markup=upl)
-        except MessageIdInvalid:
-            await CallbackQuery.message.reply_photo(
-                photo=config.GLOBAL_IMG_URL,
-                caption=_["gstats_9"],
-                reply_markup=upl,
+            await event.edit(
+                file=config.GLOBAL_IMG_URL,
+                message=_["gstats_9"],
+                buttons=upl
             )
-    if command == "GlobalStats":
+        except MessageIdInvalidError:
+            await event.respond(
+                file=config.GLOBAL_IMG_URL,
+                message=_["gstats_9"],
+                buttons=upl
+            )
+    elif command == "GlobalStats":
         upl = get_stats_markup(
             _,
-            True if CallbackQuery.from_user.id in SUDOERS else False,
-        )
-        med = InputMediaPhoto(
-            media=config.GLOBAL_IMG_URL,
-            caption=_["gstats_10"].format(app.mention),
+            True if event.sender_id in SUDOERS else False,
         )
         try:
-            await CallbackQuery.edit_message_media(media=med, reply_markup=upl)
-        except MessageIdInvalid:
-            await CallbackQuery.message.reply_photo(
-                photo=config.GLOBAL_IMG_URL,
-                caption=_["gstats_10"].format(app.mention),
-                reply_markup=upl,
+            await event.edit(
+                file=config.GLOBAL_IMG_URL,
+                message=_["gstats_10"].format(app.mention),
+                buttons=upl
             )
-    if command == "GETSTATS":
+        except MessageIdInvalidError:
+            await event.respond(
+                file=config.GLOBAL_IMG_URL,
+                message=_["gstats_10"].format(app.mention),
+                buttons=upl
+            )
+    elif command == "GETSTATS":
         upl = stats_buttons(
             _,
-            True if CallbackQuery.from_user.id in SUDOERS else False,
-        )
-        med = InputMediaPhoto(
-            media=config.STATS_IMG_URL,
-            caption=_["gstats_11"].format(app.mention),
+            True if event.sender_id in SUDOERS else False,
         )
         try:
-            await CallbackQuery.edit_message_media(media=med, reply_markup=upl)
-        except MessageIdInvalid:
-            await CallbackQuery.message.reply_photo(
-                photo=config.STATS_IMG_URL,
-                caption=_["gstats_11"].format(app.mention),
-                reply_markup=upl,
+            await event.edit(
+                file=config.STATS_IMG_URL,
+                message=_["gstats_11"].format(app.mention),
+                buttons=upl
+            )
+        except MessageIdInvalidError:
+            await event.respond(
+                file=config.STATS_IMG_URL,
+                message=_["gstats_11"].format(app.mention),
+                buttons=upl
             )
