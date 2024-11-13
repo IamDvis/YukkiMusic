@@ -7,7 +7,9 @@
 #
 # All rights reserved.
 
+
 import sys
+import logging
 from loguru import logger
 from config import LOG_FILE_NAME
 
@@ -24,11 +26,11 @@ logger.add(
     format="{time:DD-MMM-YY HH:mm:ss} - {level} - {name} - {message}",
 )
 
-logger.disable("pyrogram")
-logger.disable("telethon")
-logger.disable("pytgcalls")
-logger.disable("pymongo")
-logger.disable("httpx")
+logging.getLogger("pyrogram").setLevel(logging.ERROR)
+logging.getLogger("telethon").setLevel(logging.ERROR)
+logging.getLogger("pytgcalls").setLevel(logging.ERROR)
+logging.getLogger("pymongo").setLevel(logging.ERROR)
+logging.getLogger("httpx").setLevel(logging.ERROR)
 
 ntgcalls_logger = logger.bind(name="ntgcalls")
 ntgcalls_logger.level("CRITICAL")
