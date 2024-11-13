@@ -22,13 +22,11 @@ logger.add(
     level="INFO",
     format="{time:YYYY-MM-DD HH:mm:ss} - {level} - {name} - {message}",
     serialize=False,
-    tz=IST,
 )
 logger.add(
     sys.stdout,
     level="INFO",
     format="{time:YYYY-MM-DD HH:mm:ss} - {level} - {name} - {message}",
-    tz=IST,
 )
 
 logging.getLogger("pyrogram").setLevel(logging.ERROR)
