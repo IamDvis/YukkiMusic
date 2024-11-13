@@ -20,14 +20,14 @@ logger.add(
     rotation="5 MB",
     retention=10,
     level="INFO",
-    format="{time:DD-MMM-YY HH:mm:ss} - {level} - {name} - {message}",
+    format="{time:YYYY-MM-DD HH:mm:ss} - {level} - {name} - {message}",
     serialize=False,
     tz=IST
 )
 logger.add(
     sys.stdout,
     level="INFO",
-    format="{time:DD-MMM-YY HH:mm:ss} - {level} - {name} - {message}",
+    format="{time:YYYY-MM-DD HH:mm:ss} - {level} - {name} - {message}",
     tz=IST
 )
 
