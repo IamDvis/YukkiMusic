@@ -10,6 +10,7 @@
 import asyncio
 import time
 
+from telethon import events
 from telethon.tl.types import Channel
 from youtubesearchpython.__future__ import VideosSearch
 
