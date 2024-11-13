@@ -8,7 +8,7 @@
 # All rights reserved.
 #
 from telethon import events, Button
-from telethon.errors import MessageNotModified
+from telethon.errors import MessageNotModifiedError as MessageNotModified
 from telethon.tl.types import Chat
 from config import BANNED_USERS, CLEANMODE_DELETE_MINS, OWNER_ID
 from strings import get_command
