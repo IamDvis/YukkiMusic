@@ -14,11 +14,12 @@ from YukkiMusic.utils.database import autoend_off, autoend_on
 # Commands
 AUTOEND_COMMAND = get_command("AUTOEND_COMMAND")
 
+
 @app.on_message(command=AUTOEND_COMMAND, from_user=SUDOERS)
 async def auto_end_stream(event):
     usage = "**Usage:**\n\n/autoend [enable|disable]"
     args = event.message.text.split(maxsplit=1)
-    
+
     if len(args) != 2:
         return await event.reply(usage)
 

@@ -24,9 +24,11 @@ from YukkiMusic.platforms.Youtube import get_ytdl_options
 from YukkiMusic.utils.decorators.language import language, languageCB
 from YukkiMusic.utils.formatters import convert_bytes
 from YukkiMusic.utils.inline.song import song_markup
+
 # Command
 
 SONG_COMMAND = get_command("SONG_COMMAND")
+
 
 @app.on_message(
     command=SONG_COMMAND,
@@ -34,21 +36,21 @@ SONG_COMMAND = get_command("SONG_COMMAND")
     from_user=BANNED_USERS,
     is_restricted=True,
 )
-
 @language
 async def song_commad_group(e, _):
-    upl =   [
-            [
-                Button.url(
-                    text=_["SG_B_1"],
-                    url=f"https://t.me/{app.username}?start=song",
-                ),
-            ]
+    upl = [
+        [
+            Button.url(
+                text=_["SG_B_1"],
+                url=f"https://t.me/{app.username}?start=song",
+            ),
         ]
+    ]
     await e.reply(_["song_1"], buttons=upl)
 
 
 # Song Module
+
 
 @app.on_message(
     command=SONG_COMMAND,
@@ -115,23 +117,32 @@ async def song_commad_private(event, _):
         file=thumbnail,
         message=_["song_4"].format(title),
         buttons=buttons,
-   )
+    )
 
-@app.on(events.CallbackQuery(pattern=r"song_back", func=lambda e: e.sender_id not in BANNED_USERS))
+
+@app.on(
+    events.CallbackQuery(
+        pattern=r"song_back", func=lambda e: e.sender_id not in BANNED_USERS
+    )
+)
 @languageCB
 async def songs_back_helper(event, _):
 
-    cb_data = event.data.decode('utf-8').strip()
+    cb_data = event.data.decode("utf-8").strip()
     request = cb_data.split(None, 1)[1]
     stype, vidid = request.split("|")
     buttons = song_markup(_, vidid)
-    return await event.edit(buttons=buttons )
+    return await event.edit(buttons=buttons)
 
 
-@app.on(events.CallbackQuery(pattern=r"song_helper", func=lambda e: e.sender_id not in BANNED_USERS))
+@app.on(
+    events.CallbackQuery(
+        pattern=r"song_helper", func=lambda e: e.sender_id not in BANNED_USERS
+    )
+)
 @languageCB
 async def song_helper_cb(event, _):
-    cb_data = event.data.decode('utf-8').strip()
+    cb_data = event.data.decode("utf-8").strip()
     cb_request = cb_data.split(None, 1)[1]
     stype, vidid = cb_request.split("|")
     try:
@@ -207,14 +218,18 @@ async def song_helper_cb(event, _):
 # Downloading Songs Here
 
 
-@app.on(events.CallbackQuery(pattern=r"song_download", func=lambda e: e.sender_id not in BANNED_USERS))
+@app.on(
+    events.CallbackQuery(
+        pattern=r"song_download", func=lambda e: e.sender_id not in BANNED_USERS
+    )
+)
 @languageCB
 async def song_download_cb(event, _):
     try:
         await event.answer("Downloading...")
     except:
         pass
-    cb_data = event.data.decode('utf-8').strip()
+    cb_data = event.data.decode("utf-8").strip()
     cb_request = cb_data.split(None, 1)[1]
     stype, format_id, vidid = cb_request.split("|")
     mystic = await event.edit(_["song_8"])
@@ -267,14 +282,13 @@ async def song_download_cb(event, _):
                 file=filename,
                 message=title,
                 thumb=thumb_image_path,
-                attributes = [
+                attributes=[
                     DocumentAttributeAudio(
-                        voice=False, 
+                        voice=False,
                         title=title,
                         performer=x["uploader"],
                     )
-                ]
-                
+                ],
             )
         except Exception as e:
             return await mystic.edit(_["song_10"])

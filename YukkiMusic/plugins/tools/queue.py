@@ -26,12 +26,14 @@ QUEUE_COMMAND = get_command("QUEUE_COMMAND")
 
 basic = {}
 
+
 def get_image(videoid):
     try:
         url = f"https://img.youtube.com/vi/{videoid}/hqdefault.jpg"
         return url
     except Exception:
         return config.YOUTUBE_IMG_URL
+
 
 def get_duration(playing):
     file_path = playing[0]["file"]
@@ -43,18 +45,18 @@ def get_duration(playing):
     else:
         return "Inline"
 
+
 @app.on_message(
     command=QUEUE_COMMAND,
     is_group=True,
     from_user=BANNED_USERS,
     is_restricted=True,
 )
-
 @language
 async def ping_com(event, _):
     message = event.message
     is_cplay = message.text.startswith("c")
-    
+
     chat_id = await get_cmode(event.chat_id) if is_cplay else event.chat_id
     if chat_id is None:
         await message.reply(_["setting_12"])
@@ -75,7 +77,7 @@ async def ping_com(event, _):
     title = (got[0]["title"]).title()
     type = (got[0]["streamtype"]).title()
     DUR = get_duration(got)
-    
+
     if "live_" in file:
         IMAGE = get_image(videoid)
     elif "vid_" in file:
@@ -83,7 +85,9 @@ async def ping_com(event, _):
     elif "index_" in file:
         IMAGE = config.STREAM_IMG_URL
     else:
-        IMAGE = config.TELEGRAM_AUDIO_URL if type == "Audio" else config.TELEGRAM_VIDEO_URL
+        IMAGE = (
+            config.TELEGRAM_AUDIO_URL if type == "Audio" else config.TELEGRAM_VIDEO_URL
+        )
 
     send = (
         "**⌛️ Duration:** Unknown duration limit\n\n" + _["queue_4"]
@@ -114,7 +118,7 @@ async def ping_com(event, _):
 
     basic[videoid] = True
     mystic = await message.reply(file=IMAGE, message=cap, buttons=upl)
-    
+
     if DUR != "Unknown":
         try:
             while db[chat_id][0]["vidid"] == videoid:
@@ -155,11 +159,11 @@ async def queued_tracks(event, _):
     if event.sender_id in BANNED_USERS:
         return
     await event.answer()
-    
+
     data = event.data.decode().split("|")
     what, videoid = data[0], data[1]
     chat_id, channel = await get_channeplayCB(_, what, event)
-    
+
     if not await is_active_chat(chat_id):
         await event.answer(_["general_6"], alert=True)
         return
@@ -177,6 +181,7 @@ async def queued_tracks(event, _):
     link = await Yukkibin(msg)
     await event.edit("Queue:\n" + link, buttons=queue_back_markup(_, what))
 
+
 @app.on(events.CallbackQuery(pattern="queue_back_timer"))
 @languageCB
 async def queue_back(event, _):
@@ -186,7 +191,7 @@ async def queue_back(event, _):
 
     callback_data = event.data.decode().split("|")
     cplay = callback_data[0]
-    
+
     chat_id, channel = await get_channeplayCB(_, cplay, event)
     if not await is_active_chat(chat_id):
         await event.answer(_["general_6"], alert=True)
@@ -203,7 +208,7 @@ async def queue_back(event, _):
     title = (got[0]["title"]).title()
     type = (got[0]["streamtype"]).title()
     DUR = get_duration(got)
-    
+
     if "live_" in file:
         IMAGE = get_image(videoid)
     elif "vid_" in file:
@@ -211,7 +216,9 @@ async def queue_back(event, _):
     elif "index_" in file:
         IMAGE = config.STREAM_IMG_URL
     else:
-        IMAGE = config.TELEGRAM_AUDIO_URL if type == "Audio" else config.TELEGRAM_VIDEO_URL
+        IMAGE = (
+            config.TELEGRAM_AUDIO_URL if type == "Audio" else config.TELEGRAM_VIDEO_URL
+        )
 
     send = (
         "**⌛️ Duration:** Unknown duration limit\n\n" + _["queue_4"]
@@ -242,7 +249,7 @@ async def queue_back(event, _):
 
     basic[videoid] = True
     mystic = await event.edit(file=med, message=cap, buttons=upl)
-    
+
     if DUR != "Unknown":
         try:
             while db[chat_id][0]["vidid"] == videoid:

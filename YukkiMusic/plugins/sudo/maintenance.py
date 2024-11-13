@@ -21,8 +21,8 @@ from YukkiMusic.utils.database import (
 # Commands
 MAINTENANCE_COMMAND = get_command("MAINTENANCE_COMMAND")
 
-@app.on_message(command=MAINTENANCE_COMMAND, from_user=SUDOERS)
 
+@app.on_message(command=MAINTENANCE_COMMAND, from_user=SUDOERS)
 async def maintenance(event):
     try:
         language = await get_lang(event.chat_id)

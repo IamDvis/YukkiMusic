@@ -18,11 +18,11 @@ from YukkiMusic.utils.decorators.language import language
 # Commands
 LOGGER_COMMAND = get_command("LOGGER_COMMAND")
 
+
 @app.on_message(
     command=LOGGER_COMMAND,
     from_user=SUDOERS,
 )
-
 @language
 async def logger(event, _):
     usage = _["log_1"]

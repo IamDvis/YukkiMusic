@@ -23,7 +23,6 @@ VIDEOMODE_COMMAND = get_command("VIDEOMODE_COMMAND")
     command=VIDEOMODE_COMMAND,
     from_user=BANNED_USERS,
 )
-
 @language
 async def videoloaymode(event, _):
     usage = _["vidmode_1"]

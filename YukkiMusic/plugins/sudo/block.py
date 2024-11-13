@@ -27,15 +27,15 @@ async def useradd(event, _):
         args = event.message.text.split()
         if len(args) != 2:
             return await event.reply(_["general_1"])
-        
+
         user = args[1].replace("@", "")
         user_obj = await app.get_entity(user)
-        
+
         mention = f"[{user_obj.first_name}](tg://user?id={user_obj.id})"
-        
+
         if user_obj.id in BANNED_USERS:
             return await event.reply(_["block_1"].format(mention))
-        
+
         await add_gban_user(user_obj.id)
         BANNED_USERS.add(user_obj.id)
         await event.reply(_["block_2"].format(mention))
@@ -47,7 +47,7 @@ async def useradd(event, _):
 
     if replied_user_id in BANNED_USERS:
         return await event.reply(_["block_1"].format(mention))
-    
+
     await add_gban_user(replied_user_id)
     BANNED_USERS.add(replied_user_id)
     await event.reply(_["block_2"].format(mention))
@@ -60,15 +60,15 @@ async def userdel(event, _):
         args = event.message.text.split()
         if len(args) != 2:
             return await event.reply(_["general_1"])
-        
+
         user = args[1].replace("@", "")
         user_obj = await app.get_entity(user)
-        
+
         mention = f"[{user_obj.first_name}](tg://user?id={user_obj.id})"
-        
+
         if user_obj.id not in BANNED_USERS:
             return await event.reply(_["block_3"])
-        
+
         await remove_gban_user(user_obj.id)
         BANNED_USERS.remove(user_obj.id)
         await event.reply(_["block_4"])
@@ -80,7 +80,7 @@ async def userdel(event, _):
 
     if replied_user_id not in BANNED_USERS:
         return await event.reply(_["block_3"])
-    
+
     await remove_gban_user(replied_user_id)
     BANNED_USERS.remove(replied_user_id)
     await event.reply(_["block_4"])
@@ -91,7 +91,7 @@ async def userdel(event, _):
 async def sudoers_list(event, _):
     if not BANNED_USERS:
         return await event.reply(_["block_5"])
-    
+
     mystic = await event.reply(_["block_6"])
     msg = _["block_7"]
     count = 0
@@ -103,7 +103,7 @@ async def sudoers_list(event, _):
         except Exception:
             continue
         msg += f"{count} ➤ {mention}\n"
-    
+
     if count == 0:
         return await mystic.edit(_["block_5"])
     else:

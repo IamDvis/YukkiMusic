@@ -22,13 +22,13 @@ logger.add(
     level="INFO",
     format="{time:YYYY-MM-DD HH:mm:ss} - {level} - {name} - {message}",
     serialize=False,
-    tz=IST
+    tz=IST,
 )
 logger.add(
     sys.stdout,
     level="INFO",
     format="{time:YYYY-MM-DD HH:mm:ss} - {level} - {name} - {message}",
-    tz=IST
+    tz=IST,
 )
 
 logging.getLogger("pyrogram").setLevel(logging.ERROR)
@@ -39,6 +39,7 @@ logging.getLogger("httpx").setLevel(logging.ERROR)
 
 ntgcalls_logger = logger.bind(name="ntgcalls")
 ntgcalls_logger.level("CRITICAL")
+
 
 def LOGGER(name: str):
     return logger.bind(name=name)

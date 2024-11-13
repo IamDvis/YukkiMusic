@@ -26,17 +26,17 @@ async def blacklist_chat_func(event, _):
     args = event.message.text.split()
     if len(args) != 2:
         return await event.reply(_["black_1"])
-    
+
     chat_id = int(args[1])
     if chat_id in await blacklisted_chats():
         return await event.reply(_["black_2"])
-    
+
     blacklisted = await blacklist_chat(chat_id)
     if blacklisted:
         await event.reply(_["black_3"])
     else:
         await event.reply("Something went wrong.")
-    
+
     try:
         await app.leave_chat(chat_id)
     except:
@@ -49,11 +49,11 @@ async def whitelist_chat_func(event, _):
     args = event.message.text.split()
     if len(args) != 2:
         return await event.reply(_["black_4"])
-    
+
     chat_id = int(args[1])
     if chat_id not in await blacklisted_chats():
         return await event.reply(_["black_5"])
-    
+
     whitelisted = await whitelist_chat(chat_id)
     if whitelisted:
         await event.reply(_["black_6"])
@@ -61,7 +61,9 @@ async def whitelist_chat_func(event, _):
         await event.reply("Something went wrong.")
 
 
-@app.on_message(command=BLACKLISTEDCHAT_COMMAND, from_user=BANNED_USERS, is_restricted=True)
+@app.on_message(
+    command=BLACKLISTEDCHAT_COMMAND, from_user=BANNED_USERS, is_restricted=True
+)
 @language
 async def all_chats(event, _):
     text = _["black_7"]
@@ -74,7 +76,7 @@ async def all_chats(event, _):
             title = "Private"
         j = 1
         text += f"**{count}. {title}** [`{chat_id}`]\n"
-    
+
     if j == 0:
         await event.reply(_["black_8"])
     else:

@@ -20,6 +20,7 @@ ADDSUDO_COMMAND = get_command("ADDSUDO_COMMAND")
 DELSUDO_COMMAND = get_command("DELSUDO_COMMAND")
 SUDOUSERS_COMMAND = get_command("SUDOUSERS_COMMAND")
 
+
 @app.on_message(
     command=ADDSUDO_COMMAND,
     from_user=SUDOERS,
@@ -50,18 +51,15 @@ async def useradd(event, _):
         return
     reply_user = await event.message.get_reply_message()
     if reply_user.sender_id in SUDOERS:
-        return await event.reply(
-            _["sudo_1"].format(reply_user.sender.username)
-        )
+        return await event.reply(_["sudo_1"].format(reply_user.sender.username))
     added = await add_sudo(reply_user.sender_id)
     if added:
         SUDOERS.add(reply_user.sender_id)
-        await event.reply(
-            _["sudo_2"].format(reply_user.sender.username)
-        )
+        await event.reply(_["sudo_2"].format(reply_user.sender.username))
     else:
         await event.reply("Something wrong happened")
     return
+
 
 @app.on_message(
     command=DELSUDO_COMMAND,
@@ -101,6 +99,7 @@ async def userdel(event, _):
         await event.reply(_["sudo_4"])
         return
     await event.reply(f"Something wrong happened")
+
 
 @app.on_message(
     command=SUDOUSERS_COMMAND,

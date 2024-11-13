@@ -20,7 +20,6 @@ VIDEOLIMIT_COMMAND = get_command("VIDEOLIMIT_COMMAND")
     command=VIDEOLIMIT_COMMAND,
     from_user=SUDOERS,
 )
-
 @language
 async def set_video_limit_kid(event, _):
     if len(event.text.split()) != 2:
