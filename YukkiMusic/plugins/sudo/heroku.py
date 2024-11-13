@@ -20,9 +20,6 @@ import requests
 import urllib3
 from git import Repo
 from git.exc import GitCommandError, InvalidGitRepositoryError
-from pyrogram import filters
-from pyrogram.types import Message
-from pyrogram.enums import ChatType
 
 import config
 from config import BANNED_USERS
@@ -57,135 +54,145 @@ async def is_heroku():
     return "heroku" in socket.getfqdn()
 
 
-async def paste_neko(code: str):
-    return await Yukkibin(code)
-
-
-@app.on_message(filters.command(GETLOG_COMMAND) & SUDOERS)
+@app.on_message(
+    command=GETLOG_COMMAND,
+    from_user=SUDOERS,
+)
 @language
-async def log_(client, message, _):
+async def log_(event, _):
     try:
         if await is_heroku():
             if HAPP is None:
-                return await message.reply_text(_["heroku_1"])
+                return await event.reply(_["heroku_1"])
             data = HAPP.get_log()
             link = await Yukkibin(data)
-            return await message.reply_text(link)
+            return await event.reply(link)
         else:
             if os.path.exists(config.LOG_FILE_NAME):
                 log = open(config.LOG_FILE_NAME)
                 lines = log.readlines()
                 data = ""
                 try:
-                    NUMB = int(message.text.split(None, 1)[1])
+                    NUMB = int(event.text.split(None, 1)[1])
                 except:
                     NUMB = 100
                 for x in lines[-NUMB:]:
                     data += x
-                link = await paste_neko(data)
-                return await message.reply_text(link)
+                link = await Yukkibin(data)
+                return await event.reply(link)
             else:
-                return await message.reply_text(_["heroku_2"])
-    except Exception as e:
-        print(e)
-        await message.reply_text(_["heroku_2"])
+                return await event.reply(_["heroku_2"])
+    except Exception:
+        await event.reply(_["heroku_2"])
 
 
-@app.on_message(filters.command(GETVAR_COMMAND) & SUDOERS)
+@app.on_message(
+    command=GETVAR_COMMAND,
+    from_user=SUDOERS,
+)
 @language
-async def varget_(client, message, _):
+async def varget_(event, _):
     usage = _["heroku_3"]
-    if len(message.command) != 2:
-        return await message.reply_text(usage)
-    check_var = message.text.split(None, 2)[1]
+    if len(event.text.split()) != 2:
+        return await event.reply(usage)
+    check_var = event.text.split(None, 2)[1]
     if await is_heroku():
         if HAPP is None:
-            return await message.reply_text(_["heroku_1"])
+            return await event.reply(_["heroku_1"])
         heroku_config = HAPP.config()
         if check_var in heroku_config:
-            return await message.reply_text(
+            return await event.reply(
                 f"**{check_var}:** `{heroku_config[check_var]}`"
             )
         else:
-            return await message.reply_text(_["heroku_4"])
+            return await event.reply(_["heroku_4"])
     else:
         path = dotenv.find_dotenv()
         if not path:
-            return await message.reply_text(_["heroku_5"])
+            return await event.reply(_["heroku_5"])
         output = dotenv.get_key(path, check_var)
         if not output:
-            await message.reply_text(_["heroku_4"])
+            await event.reply(_["heroku_4"])
         else:
-            return await message.reply_text(f"**{check_var}:** `{str(output)}`")
+            return await event.reply(f"**{check_var}:** `{str(output)}`")
 
 
-@app.on_message(filters.command(DELVAR_COMMAND) & SUDOERS)
+@app.on_message(
+    command=DELVAR_COMMAND,
+    from_user=SUDOERS,
+)
 @language
-async def vardel_(client, message, _):
+async def vardel_(event, _):
     usage = _["heroku_6"]
-    if len(message.command) != 2:
-        return await message.reply_text(usage)
-    check_var = message.text.split(None, 2)[1]
+    if len(event.text.split()) != 2:
+        return await event.reply(usage)
+    check_var = event.text.split(None, 2)[1]
     if await is_heroku():
         if HAPP is None:
-            return await message.reply_text(_["heroku_1"])
+            return await event.reply(_["heroku_1"])
         heroku_config = HAPP.config()
         if check_var in heroku_config:
-            await message.reply_text(_["heroku_7"].format(check_var))
+            await event.reply(_["heroku_7"].format(check_var))
             del heroku_config[check_var]
         else:
-            return await message.reply_text(_["heroku_4"])
+            return await event.reply(_["heroku_4"])
     else:
         path = dotenv.find_dotenv()
         if not path:
-            return await message.reply_text(_["heroku_5"])
+            return await event.reply(_["heroku_5"])
         output = dotenv.unset_key(path, check_var)
         if not output[0]:
-            return await message.reply_text(_["heroku_4"])
+            return await event.reply(_["heroku_4"])
         else:
-            await message.reply_text(_["heroku_7"].format(check_var))
+            await event.reply(_["heroku_7"].format(check_var))
             os.system(f"kill -9 {os.getpid()} && python3 -m YukkiMusic")
 
 
-@app.on_message(filters.command(SETVAR_COMMAND) & SUDOERS)
+@app.on_message(
+    command=SETVAR_COMMAND,
+    from_user=SUDOERS,
+)
 @language
-async def set_var(client, message, _):
+async def set_var(event, _):
     usage = _["heroku_8"]
-    if len(message.command) < 3:
-        return await message.reply_text(usage)
-    to_set = message.text.split(None, 2)[1].strip()
-    value = message.text.split(None, 2)[2].strip()
+    if len(event.text.split()) < 3:
+        return await event.reply(usage)
+    to_set = event.text.split(None, 2)[1].strip()
+    value = event.text.split(None, 2)[2].strip()
     if await is_heroku():
         if HAPP is None:
-            return await message.reply_text(_["heroku_1"])
+            return await event.reply(_["heroku_1"])
         heroku_config = HAPP.config()
         if to_set in heroku_config:
-            await message.reply_text(_["heroku_9"].format(to_set))
+            await event.reply(_["heroku_9"].format(to_set))
         else:
-            await message.reply_text(_["heroku_10"].format(to_set))
+            await event.reply(_["heroku_10"].format(to_set))
         heroku_config[to_set] = value
     else:
         path = dotenv.find_dotenv()
         if not path:
-            return await message.reply_text(_["heroku_5"])
+            return await event.reply(_["heroku_5"])
         dotenv.set_key(path, to_set, value)
         if dotenv.get_key(path, to_set):
-            await message.reply_text(_["heroku_9"].format(to_set))
+            await event.reply(_["heroku_9"].format(to_set))
         else:
-            await message.reply_text(_["heroku_10"].format(to_set))
+            await event.reply(_["heroku_10"].format(to_set))
         os.system(f"kill -9 {os.getpid()} && python3 -m YukkiMusic")
 
 
-@app.on_message(filters.command(USAGE_COMMAND) & SUDOERS)
+@app.on_message(
+    command=USAGE_COMMAND,
+    from_user=SUDOERS,
+)
 @language
-async def usage_dynos(client, message, _):
+async def usage_dynos(event, _):
     ### Credits CatUserbot
     if await is_heroku():
         if HAPP is None:
-            return await message.reply_text(_["heroku_1"])
+            return await event.reply(_["heroku_1"])
     else:
-        return await message.reply_text(_["heroku_11"])
-    dyno = await message.reply_text(_["heroku_12"])
+        return await event.reply(_["heroku_11"])
+    dyno = await event.reply(_["heroku_12"])
     Heroku = heroku3.from_key(config.HEROKU_API_KEY)
     account_id = Heroku.account().id
     useragent = (
@@ -233,13 +240,16 @@ Total Left: `{hours}`**h**  `{minutes}`**m**  [`{percentage}`**%**]"""
     return await dyno.edit(text)
 
 
-@app.on_message(filters.command(UPDATE_COMMAND) & SUDOERS)
+@app.on_message(
+    command=UPDATE_COMMAND,
+    from_user=SUDOERS,
+)
 @language
-async def update_(client, message, _):
+async def update_(event, _):
     if await is_heroku():
         if HAPP is None:
-            return await message.reply_text(_["heroku_1"])
-    response = await message.reply_text(_["heroku_13"])
+            return await event.reply(_["heroku_1"])
+    response = await event.reply(_["heroku_13"])
     try:
         repo = Repo()
     except GitCommandError:
@@ -270,10 +280,10 @@ async def update_(client, message, _):
         url = await Yukkibin(updates)
         nrs = await response.edit(
             f"**A new upadte is available for the Bot!**\n\n➣ Pushing upadtes Now\n\n__**Updates:**__\n\n[Check Upadtes]({url})",
-            disable_web_page_preview=True,
+            link_preview=False,
         )
     else:
-        nrs = await response.edit(_final_updates_, disable_web_page_preview=True)
+        nrs = await response.edit(_final_updates_, link_preview=False)
     os.system("git stash &> /dev/null && git pull")
 
     try:
@@ -281,8 +291,8 @@ async def update_(client, message, _):
         for x in served_chats:
             try:
                 await app.send_message(
-                    chat_id=int(x),
-                    text="{0} Is upadted herself\n\nYou can start playing after 15-20 Seconds".format(
+                    int(x),
+                    "{0} Is upadted herself\n\nYou can start playing after 15-20 Seconds".format(
                         app.mention
                     ),
                 )
@@ -293,7 +303,7 @@ async def update_(client, message, _):
         await response.edit(
             _final_updates_
             + f"» Bot Upadted Sucessfully Now wait until the bot starts",
-            disable_web_page_preview=True,
+            link_preview=False,
         )
     except:
         pass
@@ -309,8 +319,8 @@ async def update_(client, message, _):
                 f"{nrs.text}\n\nSomething went wrong, Please check logs"
             )
             return await app.send_message(
-                chat_id=config.LOGGER_ID,
-                text="An exception occurred #updater due to : <code>{0}</code>".format(
+                config.LOG_GROUP_ID,
+                "An exception occurred #updater due to : <code>{0}</code>".format(
                     err
                 ),
             )
@@ -320,22 +330,26 @@ async def update_(client, message, _):
         exit()
 
 
-@app.on_message(filters.command(REBOOT_COMMAND) & filters.group & ~BANNED_USERS)
+@app.on_message(
+    command=REBOOT_COMMAND,
+    is_group=True,
+    from_user=BANNED_USERS,
+    is_restricted=True,
+)
 @AdminActual
-async def reboot(client, message: Message, _):
-    mystic = await message.reply_text(
+async def reboot(event, _):
+    mystic = await event.reply(
         f"Please Wait... \nRebooting{app.mention} For Your Chat."
     )
-    await asyncio.sleep(1)
     try:
-        db[message.chat.id] = []
-        await Yukki.stop_stream(message.chat.id)
+        db[event.chat_id] = []
+        await Yukki.stop_stream(event.chat_id)
     except:
         pass
-    chat_id = await get_cmode(message.chat.id)
+    chat_id = await get_cmode(event.chat_id)
     if chat_id:
         try:
-            await app.get_chat(chat_id)
+            await app.get_entity(chat_id)
         except:
             pass
         try:
@@ -343,22 +357,26 @@ async def reboot(client, message: Message, _):
             await Yukki.stop_stream(chat_id)
         except:
             pass
-    return await mystic.edit_text("Sucessfully Restarted \nTry playing Now..")
+    return await mystic.edit("Sucessfully Restarted \nTry playing Now..")
 
 
-@app.on_message(filters.command(RESTART_COMMAND) & ~BANNED_USERS)
-async def restart_(client, message):
-    if message.from_user and not message.from_user.id in SUDOERS:
-        if message.chat.type not in [ChatType.GROUP, ChatType.SUPERGROUP]:
+@app.on_message(
+    command=RESTART_COMMAND,
+    from_user=BANNED_USERS,
+    is_restricted=True,
+)
+async def restart_(event):
+    if not event.sender_id in SUDOERS:
+        if event.is_private:
             return
-        return await reboot(client, message)
-    response = await message.reply_text("Restarting...")
+        return await reboot(event)
+    response = await event.reply("Restarting...")
     ac_chats = await get_active_chats()
     for x in ac_chats:
         try:
             await app.send_message(
-                chat_id=int(x),
-                text=f"{app.mention} Is restarting...\n\nYou can start playing after 15-20 seconds",
+                int(x),
+                f"{app.mention} Is restarting...\n\nYou can start playing after 15-20 seconds",
             )
             await remove_active_chat(x)
             await remove_active_video_chat(x)
@@ -371,7 +389,7 @@ async def restart_(client, message):
         shutil.rmtree("cache")
     except:
         pass
-    await response.edit_text(
+    await response.edit(
         "Restart process started, please wait for few seconds until the bot starts..."
     )
     os.system(f"kill -9 {os.getpid()} && python3 -m YukkiMusic")
