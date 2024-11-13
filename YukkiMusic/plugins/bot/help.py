@@ -74,7 +74,7 @@ async def help_com_group(event, _):
 @app.on(events.CallbackQuery(pattern=r"help_callback (.*)"))
 @languageCB
 async def helper_cb(event, _):
-    cba = event.data.decode("utf-8").split(" ", 1)[-1]
+    cb = event.data.decode("utf-8").split(" ", 1)[-1]
     keyboard = help_back_markup(_)
     if cb == "hb1":
         await event.edit(helpers.HELP_1, buttons=keyboard)
