@@ -7,6 +7,7 @@
 #
 # All rights reserved.
 #
+from telethon import events
 
 from config import BANNED_USERS, START_IMG_URL
 from strings import get_command, get_string
