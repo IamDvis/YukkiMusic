@@ -8,9 +8,9 @@
 # All rights reserved.
 
 import sys
-import logging
 from loguru import logger
 from config import LOG_FILE_NAME
+import logging
 
 logger.add(
     LOG_FILE_NAME,
@@ -32,6 +32,9 @@ logging.getLogger("telethon").setLevel(logging.ERROR)
 logging.getLogger("pytgcalls").setLevel(logging.ERROR)
 logging.getLogger("pymongo").setLevel(logging.ERROR)
 logging.getLogger("httpx").setLevel(logging.ERROR)
+
+ntgcalls_logger = logger.bind(name="ntgcalls")
+ntgcalls_logger.level("CRITICAL")
 
 def LOGGER(name: str):
     return logger.bind(name=name)
