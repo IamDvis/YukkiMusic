@@ -11,9 +11,6 @@ import sys
 import logging
 from loguru import logger
 from config import LOG_FILE_NAME
-from datetime import timedelta, timezone
-
-IST = timezone(timedelta(hours=5, minutes=30))
 
 logger.add(
     LOG_FILE_NAME,
@@ -23,6 +20,7 @@ logger.add(
     format="{time:YYYY-MM-DD HH:mm:ss} - {level} - {name} - {message}",
     serialize=False,
 )
+
 logger.add(
     sys.stdout,
     level="INFO",
@@ -34,10 +32,6 @@ logging.getLogger("telethon").setLevel(logging.ERROR)
 logging.getLogger("pytgcalls").setLevel(logging.ERROR)
 logging.getLogger("pymongo").setLevel(logging.ERROR)
 logging.getLogger("httpx").setLevel(logging.ERROR)
-
-ntgcalls_logger = logger.bind(name="ntgcalls")
-ntgcalls_logger.level("CRITICAL")
-
 
 def LOGGER(name: str):
     return logger.bind(name=name)
