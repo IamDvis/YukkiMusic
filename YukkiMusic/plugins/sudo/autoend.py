@@ -8,7 +8,8 @@
 # All rights reserved.
 #
 from strings import get_command
-from YukkiMusic import app, SUDOERS
+from YukkiMusic import app
+from YukkiMusic.misc import SUDOERS
 from YukkiMusic.utils.database import autoend_off, autoend_on
 
 # Commands
