@@ -36,13 +36,14 @@ async def aexec(code, event):
     return await __aexec_func(event)
 
 
-@app.on(events.MessageEdited(pattern=r"^/(ev|eval)", func=lambda e: e.sender_id  in SUDOERS))
+@app.on(events.MessageEdited(pattern=r"^/(ev|eval)", func=lambda e: e.sender_id in SUDOERS))
 @app.on_message(
     command=["ev", "eval"],
-    from_user=SUDOERS)
+    from_user=SUDOERS
+)
 async def executor(event):
     if len(event.message.text.split()) < 2:
-        return await event.reply("<b>Give me something to execute</b>")
+        return await event.reply("**Give me something to execute**")
     cmd = event.message.text.split(" ", maxsplit=1)[1]
     t1 = time()
     old_stderr = sys.stderr
@@ -67,19 +68,19 @@ async def executor(event):
         evaluation += stdout
     else:
         evaluation += "Success"
-    final_output = f"<b>RESULTS:</b>\n<pre language='python'>{evaluation}</pre>"
+    final_output = f"**RESULTS:**\n```python\n{evaluation}\n```"
     if len(final_output) > 4096:
         filename = "output.txt"
         with open(filename, "w+", encoding="utf8") as out_file:
             out_file.write(str(evaluation))
         t2 = time()
-        await event.reply(file=filename, message=f"<b>EVAL :</b>\n<code>{cmd[:980]}</code>\n\n<b>Results:</b> Attached Document")
+        await event.reply(file=filename, message=f"**EVAL :**\n`{cmd[:980]}`\n\n**Results:** Attached Document")
         os.remove(filename)
     else:
         t2 = time()
         keyboard = [
-            [Button.inline("⏳", f"runtime {round(t2 - t1, 3)} Seconds")],
-            [Button.inline("🗑", f"forceclose {event.sender_id}")],
+            [Button.inline("⏳", f"runtime {round(t2 - t1, 3)} Seconds"),
+            Button.inline("🗑", f"forceclose {event.sender_id}")],
         ]
         await event.reply(final_output, buttons=keyboard)
 
