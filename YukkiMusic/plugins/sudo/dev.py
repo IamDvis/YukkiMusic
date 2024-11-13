@@ -43,7 +43,7 @@ async def aexec(code, event):
 )
 async def executor(event):
     if len(event.message.text.split()) < 2:
-        return await event.reply("**Give me something to execute**")
+        return await event.reply("<b>Give me something to execute</b>", parse_mode="html")
     cmd = event.message.text.split(" ", maxsplit=1)[1]
     t1 = time()
     old_stderr = sys.stderr
@@ -68,21 +68,21 @@ async def executor(event):
         evaluation += stdout
     else:
         evaluation += "Success"
-    final_output = f"**RESULTS:**\n```python\n{evaluation}\n```"
+    final_output = f"<b>RESULTS:</b>\n<pre>{evaluation}</pre>"
     if len(final_output) > 4096:
         filename = "output.txt"
         with open(filename, "w+", encoding="utf8") as out_file:
             out_file.write(str(evaluation))
         t2 = time()
-        await event.reply(file=filename, message=f"**EVAL :**\n`{cmd[:980]}`\n\n**Results:** Attached Document")
+        await event.reply(file=filename, message=f"<b>EVAL :</b>\n<code>{cmd[:980]}</code>\n\n<b>Results:</b> Attached Document", parse_mode="html")
         os.remove(filename)
     else:
         t2 = time()
         keyboard = [
-            [Button.inline("⏳", f"runtime {round(t2 - t1, 3)} Seconds"),
-            Button.inline("🗑", f"forceclose {event.sender_id}")],
+            [Button.inline("⏳", f"runtime {round(t2 - t1, 3)} Seconds")],
+            [Button.inline("🗑", f"forceclose {event.sender_id}")],
         ]
-        await event.reply(final_output, buttons=keyboard)
+        await event.reply(final_output, buttons=keyboard, parse_mode="html")
 
 
 @app.on(events.CallbackQuery(data=re.compile(b"runtime")))
