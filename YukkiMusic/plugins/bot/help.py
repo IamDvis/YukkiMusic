@@ -13,7 +13,7 @@ from config import BANNED_USERS, START_IMG_URL
 from strings import get_command, get_string
 from YukkiMusic import app
 from YukkiMusic.utils.database import get_lang, is_commanddelete_on
-from YukkiMusic.utils.decorators.language import LanguageStart
+from YukkiMusic.utils.decorators.language import LanguageStart, LanguageCB
 from YukkiMusic.utils.inline.help import private_help_panel, help_markup
 
 ### Command
