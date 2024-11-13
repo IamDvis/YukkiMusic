@@ -29,7 +29,7 @@ def language(mystic):
                 await event.delete()
             except:
                 pass
-        return await mystic(_, event, language)
+        return await mystic(event, language)
 
     return wrapper
 
