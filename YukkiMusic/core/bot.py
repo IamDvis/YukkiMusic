@@ -52,7 +52,6 @@ class YukkiBot(TelegramClient):
             api_id=config.API_ID,
             api_hash=config.API_HASH,
             flood_sleep_threshold=240,
-            parse_mode="markdown",
         )
 
     async def edit_message(self, *args, **kwargs):
@@ -94,6 +93,7 @@ class YukkiBot(TelegramClient):
 
     async def start(self):
         await super().start(bot_token=config.BOT_TOKEN)
+        super().parse_mode = "markdown"
         get_me = await self.get_me()
         self.username = get_me.username
         self.id = get_me.id
