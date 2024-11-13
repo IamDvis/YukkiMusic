@@ -10,7 +10,7 @@
 from telethon import events
 
 from config import BANNED_USERS, START_IMG_URL
-from strings import get_command, get_string
+from strings import get_command, get_string, helpers
 from YukkiMusic import app
 from YukkiMusic.utils.database import get_lang, is_commanddelete_on
 from YukkiMusic.utils.decorators.language import LanguageStart, languageCB
