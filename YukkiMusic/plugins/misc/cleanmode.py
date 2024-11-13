@@ -64,7 +64,7 @@ async def clean_mode(event):
 
 
 @app.on_message(
-    command=AUTH_COMMAND,
+    command=BROADCAST_COMMAND,
     from_user=config.OWNER_ID,
 )
 async def broadcast_message(event):
