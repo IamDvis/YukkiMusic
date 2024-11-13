@@ -118,7 +118,7 @@ async def del_group_message(event, _):
 
 
 @app.on_message(
-    command=AUTH_COMMAND,
+    command=DELETE_PLAYLIST_COMMAND,
     is_private=True,
     from_user=BANNED_USERS,
     is_restricted=True,
