@@ -13,7 +13,7 @@ from config import BANNED_USERS, START_IMG_URL
 from strings import get_command, get_string
 from YukkiMusic import app
 from YukkiMusic.utils.database import get_lang, is_commanddelete_on
-from YukkiMusic.utils.decorators.language import LanguageStart, LanguageCB
+from YukkiMusic.utils.decorators.language import LanguageStart, languageCB
 from YukkiMusic.utils.inline.help import private_help_panel, help_markup
 
 ### Command
@@ -72,7 +72,7 @@ async def help_com_group(event, _):
 
 
 @app.on(events.CallbackQuery(pattern=r"help_callback (.*)"))
-@LanguageCB
+@languageCB
 async def helper_cb(event, _):
     cba = event.data.decode("utf-8").split(" ", 1)[-1]
     keyboard = help_back_markup(_)
