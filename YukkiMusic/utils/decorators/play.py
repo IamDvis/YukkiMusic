@@ -18,7 +18,7 @@ from pyrogram.errors import (
 
 from telethon.errors import ChatAdminRequiredError, UserNotParticipantError
 from telethon.tl.types import User, ChannelParticipantBanned, ChannelParticipantLeft
-from telethon.functions.messages import HideChatJoinRequestRequest
+from telethon.tl.functions.messages import HideChatJoinRequestRequest
 
 from config import PLAYLIST_IMG_URL, PRIVATE_BOT_MODE
 from config import SUPPORT_GROUP as SUPPORT_CHAT
