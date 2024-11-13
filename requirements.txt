@@ -1,19 +1,19 @@
 aiohttp
-aiologger
 beautifulsoup4
-cryptg
+cryptg # For Telethon 
 dnspython
 ffmpeg-python
 gitpython
 heroku3
-hachoir
+hachoir # for Telethon 
+loguru
 lyricsgenius
 motor
 psutil
 pytube
 pykeyboard
 pillow # Not used just for telethon image compression 
-py-tgcalls==2.0.4
+py-tgcalls
 python-dotenv
 PyTgCrypto>=1.2.7
 pyyaml
