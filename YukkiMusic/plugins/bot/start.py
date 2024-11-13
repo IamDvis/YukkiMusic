@@ -229,7 +229,7 @@ async def start_comm(event, _):
     is_restricted=True,
 )
 @LanguageStart
-async def testbot(client, message: Message, _):
+async def testbot(event, _):
     uptime = int(time.time() - _boot_)
     chat_id = event.chat_id
     await event.reply(_["start_7"].format(get_readable_time(uptime)))
