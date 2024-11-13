@@ -183,7 +183,7 @@ class YukkiBot(TelegramClient):
         incoming: bool = True,
         outgoing: bool = None,
     ):
-        ids = set() if ids is None else ids
+        from_user = set() if ids is None else from_user
 
         if isinstance(command, str):
             command = [command]
