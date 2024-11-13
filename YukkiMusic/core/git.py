@@ -40,7 +40,6 @@ def install_req(cmd: str) -> Tuple[str, str, int, int]:
 
     return loop.run_until_complete(install_requirements())
 
-
 def git():
     REPO_LINK = config.UPSTREAM_REPO
     if config.GIT_TOKEN:
@@ -52,45 +51,30 @@ def git():
 
     try:
         repo = Repo()
-        LOGGER(__name__).info(f"Git Client Found [VPS DEPLOYER]")
+        LOGGER(__name__).info("Git Client Found [VPS DEPLOYER]")
     except GitCommandError:
-        LOGGER(__name__).info(f"Invalid Git Command")
+        LOGGER(__name__).info("Invalid Git Command")
     except InvalidGitRepositoryError:
         repo = Repo.init()
-        if "origin" in repo.remotes:
-            origin = repo.remote("origin")
-        else:
-            origin = repo.create_remote("origin", UPSTREAM_REPO)
+        origin = repo.create_remote("origin", UPSTREAM_REPO) if "origin" not in repo.remotes else repo.remote("origin")
         origin.fetch()
-        repo.create_head(
-            config.UPSTREAM_BRANCH,
-            origin.refs[config.UPSTREAM_BRANCH],
-        )
-        repo.heads[config.UPSTREAM_BRANCH].set_tracking_branch(
-            origin.refs[config.UPSTREAM_BRANCH]
-        )
+        repo.create_head(config.UPSTREAM_BRANCH, origin.refs[config.UPSTREAM_BRANCH])
+        repo.heads[config.UPSTREAM_BRANCH].set_tracking_branch(origin.refs[config.UPSTREAM_BRANCH])
         repo.heads[config.UPSTREAM_BRANCH].checkout(True)
 
-        try:
-            repo.create_remote("origin", config.UPSTREAM_REPO)
-        except BaseException:
-            pass
-
-    nrs = repo.remote("origin")
-    nrs.fetch(config.UPSTREAM_BRANCH)
-
-    requirements_file = "requirements.txt"
-    diff_index = repo.head.commit.diff("FETCH_HEAD")
-
-    requirements_updated = any(
-        diff.a_path == requirements_file or diff.b_path == requirements_file
-        for diff in diff_index
-    )
-
     try:
+        repo.git.fetch()
+        nrs = repo.remote("origin")
         nrs.pull(config.UPSTREAM_BRANCH)
     except GitCommandError:
         repo.git.reset("--hard", "FETCH_HEAD")
+        LOGGER(__name__).info("Error during pull; reset to FETCH_HEAD")
+
+    diff_index = repo.head.commit.diff("FETCH_HEAD")
+    requirements_updated = any(
+        diff.a_path == "requirements.txt" or diff.b_path == "requirements.txt"
+        for diff in diff_index
+    )
 
     if requirements_updated:
         install_req("pip3 install --no-cache-dir -r requirements.txt")
