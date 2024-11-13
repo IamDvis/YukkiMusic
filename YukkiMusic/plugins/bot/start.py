@@ -40,7 +40,6 @@ loop = asyncio.get_running_loop()
 
 START_COMMAND = get_command("START_COMMAND")
 
-
 @app.on_message(
     command=START_COMMAND,
     is_private=True,
@@ -67,7 +66,7 @@ async def start_comm(event, _):
                 )
             else:
                 return await event.respond(
-                    text=_["help_1"],
+                    message=_["help_1"],
                     buttons=help_markup,
                 )
         if name[0:4] == "song":
@@ -208,12 +207,12 @@ async def start_comm(event, _):
                 )
             except:
                 await event.respond(
-                    text=_["start_1"].format(app.mention),
+                    message=_["start_1"].format(app.mention),
                     buttons=out,
                 )
         else:
             await event.respond(
-                text=_["start_1"].format(app.mention),
+                message=_["start_1"].format(app.mention),
                 buttons=out,
             )
         if await is_on_off(config.LOG):
