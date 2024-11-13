@@ -21,7 +21,7 @@ VIDEOMODE_COMMAND = get_command("VIDEOMODE_COMMAND")
 
 @app.on_message(
     command=VIDEOMODE_COMMAND,
-    from_user=BANNED_USERS,
+    from_user=SUDOERS,
 )
 @language
 async def videoloaymode(event, _):
