@@ -7,33 +7,31 @@
 #
 # All rights reserved.
 
-
-import logging
-from logging.handlers import RotatingFileHandler
-
+import sys
+from loguru import logger
 from config import LOG_FILE_NAME
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="[%(asctime)s - %(levelname)s] - %(name)s - %(message)s",
-    datefmt="%d-%b-%y %H:%M:%S",
-    handlers=[
-        RotatingFileHandler(LOG_FILE_NAME, maxBytes=5000000, backupCount=10),
-        logging.StreamHandler(),
-    ],
+logger.add(
+    LOG_FILE_NAME,
+    rotation="5 MB",
+    retention=10,
+    level="INFO",
+    format="{time:DD-MMM-YY HH:mm:ss} - {level} - {name} - {message}",
+)
+logger.add(
+    sys.stdout,
+    level="INFO",
+    format="{time:DD-MMM-YY HH:mm:ss} - {level} - {name} - {message}",
 )
 
-logging.getLogger("pyrogram").setLevel(logging.ERROR)
-logging.getLogger("telethon").setLevel(logging.ERROR)
-logging.getLogger("pytgcalls").setLevel(logging.ERROR)
-logging.getLogger("pymongo").setLevel(logging.ERROR)
-logging.getLogger("httpx").setLevel(logging.ERROR)
+logger.disable("pyrogram")
+logger.disable("telethon")
+logger.disable("pytgcalls")
+logger.disable("pymongo")
+logger.disable("httpx")
 
-# Setting ntgcalls logger level and disabling propagation
-ntgcalls_logger = logging.getLogger("ntgcalls")
-ntgcalls_logger.setLevel(logging.CRITICAL)
-ntgcalls_logger.propagate = False
+ntgcalls_logger = logger.bind(name="ntgcalls")
+ntgcalls_logger.level("CRITICAL")
 
-
-def LOGGER(name: str) -> logging.Logger:
-    return logging.getLogger(name)
+def LOGGER(name: str):
+    return logger.bind(name=name)
