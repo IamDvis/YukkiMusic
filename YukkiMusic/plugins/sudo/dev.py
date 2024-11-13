@@ -79,8 +79,8 @@ async def executor(event):
     else:
         t2 = time()
         keyboard = [
-            [Button.inline("⏳", f"runtime {round(t2 - t1, 3)} Seconds")],
-            [Button.inline("🗑", f"forceclose {event.sender_id}")],
+            [Button.inline("⏳", f"runtime {round(t2 - t1, 3)} Seconds"),
+            Button.inline("🗑", f"forceclose {event.sender_id}")],
         ]
         await event.reply(final_output, buttons=keyboard, parse_mode="html")
 
