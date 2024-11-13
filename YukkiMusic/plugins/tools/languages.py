@@ -8,7 +8,7 @@
 # All rights reserved.
 #
 from telethon import events, Button
-from telethon.errors import FloodWaitError as FloodWait
+from telethon.errors import FloodWaitError
 from pykeyboard import InlineKeyboard
 
 from strings import get_command, get_string, languages_present
@@ -61,7 +61,7 @@ async def langs_command(event, _):
 async def language_cb(event, _):
     try:
         await event.answer()
-    except FloodWait as e:
+    except FloodWaitError as e:
         await asyncio.sleep(e.seconds)
     keyboard = languages_keyboard(_)
     await event.edit(buttons=keyboard)
