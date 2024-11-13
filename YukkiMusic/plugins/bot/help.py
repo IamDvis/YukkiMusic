@@ -14,7 +14,7 @@ from strings import get_command, get_string
 from YukkiMusic import app
 from YukkiMusic.utils.database import get_lang, is_commanddelete_on
 from YukkiMusic.utils.decorators.language import LanguageStart, languageCB
-from YukkiMusic.utils.inline.help import private_help_panel, help_markup
+from YukkiMusic.utils.inline.help import private_help_panel, help_markup, help_back_markup
 
 ### Command
 HELP_COMMAND = get_command("HELP_COMMAND")
