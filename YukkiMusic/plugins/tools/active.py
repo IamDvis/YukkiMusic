@@ -88,7 +88,7 @@ async def activevi(event):
 
 @app.on_message(
     command=AC_COMMAND,
-    from_user=BANNED_USERS,
+    from_user=SUDOERS,
 )
 async def vc(event):
     ac_audio = str(len(await get_active_chats()))
