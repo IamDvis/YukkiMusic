@@ -609,9 +609,9 @@ async def slider_queries(event, _):
 
     buttons = slider_markup(_, vidid, user_id, query, query_type, cplay, fplay)
 
-    await event.edit_message(
+    await event.edit(
         file=thumbnail,
-        text=_["play_11"].format(
+        message=_["play_11"].format(
             title.title(),
             duration_min,
         ),
@@ -621,7 +621,7 @@ async def slider_queries(event, _):
 
 @app.on(events.CallbackQuery(pattern="close"))
 async def close_menu(event):
-    await event.message.delete()
+    await event.delete()
     await event.answer()
 
 
