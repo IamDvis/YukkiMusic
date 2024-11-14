@@ -169,7 +169,4 @@ __Reply with /play on this searched message to stream it on voice chat.__
                     buttons=buttons,
                 )
             )
-        try:
-            await event.answer(answers)
-        except:
-            return
+        await event.answer(answers)
