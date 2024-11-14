@@ -37,7 +37,7 @@ async def on_bot_added_or_kicked(event):
                     )
                     await app.send_message(
                         LOG_GROUP_ID,
-                        text=msg,
+                        message=msg,
                         buttons=[
                             [
                                 Button.url(
@@ -70,7 +70,7 @@ async def on_bot_added_or_kicked(event):
 
                 await app.send_message(
                     LOG_GROUP_ID,
-                    text=left,
+                    message=left,
                     buttons=[
                         [
                             Button.url(
