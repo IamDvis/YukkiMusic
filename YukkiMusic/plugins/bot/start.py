@@ -43,7 +43,6 @@ START_COMMAND = get_command("START_COMMAND")
 @app.on_message(
     command=START_COMMAND,
     is_private=True,
-    is_group=False,
     from_user=BANNED_USERS,
     is_restricted=True,
 )
@@ -58,10 +57,10 @@ async def start_comm(event, _):
         name = event.message.text.split(None, 1)[1]
         if name[0:4] == "help":
             if config.START_IMG_URL:
-                return await app.send_file(
+                return await event.respond(
                     event.chat_id,
-                    photo=START_IMG_URL,
-                    caption=_["help_1"],
+                    file=START_IMG_URL,
+                    message=_["help_1"],
                     buttons=help_markup,
                 )
             else:
