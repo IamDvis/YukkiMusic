@@ -8,7 +8,8 @@
 # All rights reserved.
 #
 from telethon import events, Button
-from telethon.tl.types import InputWebDocument
+from telethon.tl.types import InputWebDocument, DocumentAttributeImageSize
+
 from youtubesearchpython.__future__ import VideosSearch
 from config import BANNED_USERS
 from YukkiMusic import app
@@ -21,6 +22,7 @@ answer = [
             url="https://telegra.ph/file/c0a1c789def7b93f13745.png",
             mime_type="image/png",
             size=0,
+            attributes=[DocumentAttributeImageSize(320, 180)],
         ),
         text="/pause",
     ),
@@ -31,6 +33,7 @@ answer = [
             url="https://telegra.ph/file/02d1b7f967ca11404455a.png",
             mime_type="image/png",
             size=0,
+            attributes=[DocumentAttributeImageSize(320, 180)],
         ),
         text="/resume",
     ),
@@ -41,6 +44,7 @@ answer = [
             url="https://telegra.ph/file/66516f2976cb6d87e20f9.png",
             mime_type="image/png",
             size=0,
+            attributes=[DocumentAttributeImageSize(320, 180)],
         ),
         text="/vcmute",
     ),
@@ -51,6 +55,7 @@ answer = [
             url="https://telegra.ph/file/3078794f9341ffd582e18.png",
             mime_type="image/png",
             size=0,
+            attributes=[DocumentAttributeImageSize(320, 180)],
         ),
         text="/vcunmute",
     ),
@@ -61,6 +66,7 @@ answer = [
             url="https://telegra.ph/file/98b88e52bc625903c7a2f.png",
             mime_type="image/png",
             size=0,
+            attributes=[DocumentAttributeImageSize(320, 180)],
         ),
         text="/skip",
     ),
@@ -71,6 +77,7 @@ answer = [
             url="https://telegra.ph/file/d2eb03211baaba8838cc4.png",
             mime_type="image/png",
             size=0,
+            attributes=[DocumentAttributeImageSize(320, 180)],
         ),
         text="/stop",
     ),
@@ -81,6 +88,7 @@ answer = [
             url="https://telegra.ph/file/7f6aac5c6e27d41a4a269.png",
             mime_type="image/png",
             size=0,
+            attributes=[DocumentAttributeImageSize(320, 180)],
         ),
         text="/shuffle",
     ),
@@ -91,6 +99,7 @@ answer = [
             url="https://telegra.ph/file/cd25ec6f046aa8003cfee.png",
             mime_type="image/png",
             size=0,
+            attributes=[DocumentAttributeImageSize(320, 180)],
         ),
         text="/seek 10",
     ),
@@ -101,6 +110,7 @@ answer = [
             url="https://telegra.ph/file/081c20ce2074ea3e9b952.png",
             mime_type="image/png",
             size=0,
+            attributes=[DocumentAttributeImageSize(320, 180)],
         ),
         text="/loop 3",
     ),
@@ -153,9 +163,13 @@ __Reply with /play on this searched message to stream it on voice chat.__
                     thumb=InputWebDocument(
                         url=thumbnail,
                         mime_type="image/jpeg",
-                        size=0
+                        size=0,
+                        attributes=[DocumentAttributeImageSize(320, 180)]
                     ),
                     buttons=buttons,
                 )
             )
-        await event.answer(answers)
+        try:
+            await event.answer(answers)
+        except:
+            return
