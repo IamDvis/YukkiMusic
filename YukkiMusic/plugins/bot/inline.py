@@ -155,18 +155,22 @@ async def inline_query_handler(event):
 __Reply with /play on this searched message to stream it on voice chat.__
 
 ⚡️ ** Inline search by {app.name} **"""
+
             answers.append(
-                event.builder.article(
-                    title=title,
-                    description=description,
-                    text=searched_text,
-                    thumb=InputWebDocument(
+                InputBotInlineResultPhoto(
+                    id=str(x),
+                    type="photo",
+                    photo=InputWebDocument(
                         url=thumbnail,
                         mime_type="image/jpeg",
                         size=0,
                         attributes=[DocumentAttributeImageSize(320, 180)]
                     ),
-                    buttons=buttons,
+                    title=title,
+                    description=description,
+                    caption=searched_text,
+                    reply_markup=buttons,
                 )
             )
+
         await event.answer(answers)
