@@ -29,6 +29,7 @@ from telethon.tl.functions.channels import LeaveChannelRequest
 from telethon.tl.functions.messages import DeleteChatUserRequest
 from telethon.tl.functions.messages import ExportChatInviteRequest
 
+from telethon.tl.types import User
 from telethon.tl.types import BotCommand
 from telethon.tl.types import BotCommandScopeUsers
 from telethon.tl.types import BotCommandScopeChats
@@ -238,3 +239,18 @@ class YukkiBot(TelegramClient):
             await self(LeaveChannelRequest(entity))
         elif isinstance(entity, PeerChat) or hasattr(entity, "chat_id"):
             await self(DeleteChatUserRequest(entity.id, InputUserSelf()))
+
+    async def create_mention(self, user: User) -> str:
+        """
+        Create a markdown mention for a given Telethon user.
+
+        Args:
+            user (User): A Telethon User object containing the user's details.
+
+        Returns:
+            str: A markdown formatted mention.
+        """
+        user_name = f"{user.first_name} {user.last_name or ''}".strip()
+        user_id = user.id
+        mention = f"[{user_name}](tg://user?id={user_id})"
+        return mention
