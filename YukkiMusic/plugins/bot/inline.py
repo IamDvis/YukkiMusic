@@ -8,7 +8,7 @@
 # All rights reserved.
 #
 from telethon import events, Button
-from telethon.tl.types import InputWebDocument, DocumentAttributeImageSize
+from telethon.tl.types import InputBotInlineResultPhoto, InputWebDocument, DocumentAttributeImageSize
 
 from youtubesearchpython.__future__ import VideosSearch
 from config import BANNED_USERS
