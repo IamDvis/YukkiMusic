@@ -58,7 +58,6 @@ async def start_comm(event, _):
         if name[0:4] == "help":
             if config.START_IMG_URL:
                 return await event.respond(
-                    event.chat_id,
                     file=START_IMG_URL,
                     message=_["help_1"],
                     buttons=help_markup,
