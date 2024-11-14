@@ -106,7 +106,6 @@ answer = [
     ),
 ]
 
-
 @app.on(events.InlineQuery)
 async def inline_query_handler(event):
     if event.sender_id in BANNED_USERS:
@@ -147,15 +146,16 @@ __Reply with /play on this searched message to stream it on voice chat.__
 
 ⚡️ ** Inline search by {app.name} **"""
             answers.append(
-                event.builder.photo(
-                    file=thumbnail,
+                event.builder.article(
                     title=title,
                     description=description,
                     text=searched_text,
+                    thumb=InputWebDocument(
+                        url=thumbnail,
+                        mime_type="image/jpeg",
+                        size=0
+                    ),
                     buttons=buttons,
                 )
             )
-        try:
-            await event.answer(answers)
-        except:
-            return
+        await event.answer(answers)
