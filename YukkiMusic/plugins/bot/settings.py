@@ -89,7 +89,7 @@ async def settings_cb(event, _):
 @languageCB
 async def settings_back_markup(event, _):
     await event.answer()
-    if isinstance(event.chat, Chat):
+    if event.is_private:
         try:
             await app.get_entity(OWNER_ID[0])
             OWNER = OWNER_ID[0]
