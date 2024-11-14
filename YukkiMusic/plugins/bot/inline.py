@@ -8,7 +8,7 @@
 # All rights reserved.
 #
 from telethon import events, Button
-from telethon.tl.types import InputBotInlineResultPhoto, InputWebDocument, DocumentAttributeImageSize
+from telethon.tl.types import InputWebDocument
 
 from youtubesearchpython.__future__ import VideosSearch
 from config import BANNED_USERS
@@ -157,19 +157,23 @@ __Reply with /play on this searched message to stream it on voice chat.__
 ⚡️ ** Inline search by {app.name} **"""
 
             answers.append(
-                InputBotInlineResultPhoto(
-                    id=str(x),
-                    type="photo",
-                    photo=InputWebDocument(
+                event.builder.article(
+                    title=title,
+                    description=description,
+                    text=searched_text,
+                    thumb=InputWebDocument(
                         url=thumbnail,
                         mime_type="image/jpeg",
                         size=0,
-                        attributes=[DocumentAttributeImageSize(320, 180)]
+                        attributes=[]
                     ),
-                    title=title,
-                    description=description,
-                    caption=searched_text,
-                    reply_markup=buttons,
+                    content=InputWebDocument(
+                        url=thumbnail,
+                        mime_type="image/jpeg",
+                        size=0,
+                        attributes=[]
+                    ),
+                    buttons=buttons,
                 )
             )
 
