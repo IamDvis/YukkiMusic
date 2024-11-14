@@ -27,13 +27,18 @@ async def on_bot_added_or_kicked(event):
                 if member.id == app.id:
                     count = await app.get_participants_count(chat.id)
                     username = chat.username if chat.username else "Private Chat"
+                    added_by = await app.get_entity(event.added_by) if event.added_by else None
+                    added_by_mention = (
+                        await app.create_mention(added_by) if added_by else "Unknown"
+                    )
+
                     msg = (
                         f"**Music bot added in new Group #New_Group**\n\n"
                         f"**Chat Name:** {chat.title}\n"
                         f"**Chat Id:** {chat.id}\n"
                         f"**Chat Username:** @{username}\n"
                         f"**Chat Member Count:** {count}\n"
-                        f"**Added By:** {event.user.mention}"
+                        f"**Added By:** {added_by_mention}"
                     )
                     await app.send_message(
                         LOG_GROUP_ID,
@@ -41,8 +46,8 @@ async def on_bot_added_or_kicked(event):
                         buttons=[
                             [
                                 Button.url(
-                                    text=f"Added by: {event.user.first_name}",
-                                    url=f"tg://user?id={event.user.id}",
+                                    text=f"Added by: {added_by.first_name}" if added_by else "Unknown",
+                                    url=f"tg://user?id={added_by.id}" if added_by else "tg://user?id=0",
                                 )
                             ]
                         ],
@@ -52,11 +57,11 @@ async def on_bot_added_or_kicked(event):
 
         elif event.user_kicked or event.user_left:
             if event.user_id == app.id:
-                remove_by = (
-                    event.action_message.from_id
-                    if event.action_message
-                    else "Unknown User"
+                removed_by = await app.get_entity(event.action_message.from_id) if event.action_message else None
+                remove_by_mention = (
+                    await app.create_mention(removed_by) if removed_by else "Unknown User"
                 )
+
                 title = chat.title
                 username = f"@{chat.username}" if chat.username else "Private Chat"
                 chat_id = chat.id
@@ -65,7 +70,7 @@ async def on_bot_added_or_kicked(event):
                     f"**Chat Name**: {title}\n"
                     f"**Chat Id**: {chat_id}\n"
                     f"**Chat Username**: {username}\n"
-                    f"**Removed By**: {remove_by}"
+                    f"**Removed By**: {remove_by_mention}"
                 )
 
                 await app.send_message(
@@ -74,12 +79,8 @@ async def on_bot_added_or_kicked(event):
                     buttons=[
                         [
                             Button.url(
-                                text=f"Removed By: {event.action_message.from_id.first_name if event.action_message.from_id else 'Unknown User'}",
-                                url=(
-                                    f"tg://user?id={event.action_message.from_id}"
-                                    if event.action_message
-                                    else "tg://user?id=0"
-                                ),
+                                text=f"Removed By: {removed_by.first_name}" if removed_by else "Unknown User",
+                                url=f"tg://user?id={removed_by.id}" if removed_by else "tg://user?id=0",
                             )
                         ]
                     ],
