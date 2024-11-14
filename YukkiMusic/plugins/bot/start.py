@@ -196,12 +196,10 @@ async def start_comm(event, _):
         out = private_panel(_, app.username, OWNER)
         if config.START_IMG_URL:
             try:
-                await app.send_file(
-                    event.chat_id,
+                await event.respond(
                     file=config.START_IMG_URL,
-                    caption=_["start_1"].format(app.mention),
+                    message=_["start_1"].format(app.mention),
                     buttons=out,
-                    reply_to=event.message_id,
                 )
             except:
                 await event.respond(
