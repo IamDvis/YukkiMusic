@@ -257,7 +257,7 @@ def PlayWrapper(command):
                         await app.edit_permissions(chat_id, userbot.id)
                     except:
                         return await event.reply(
-                            text=_["call_2"].format(userbot.username, userbot.id),
+                            message=_["call_2"].format(userbot.username, userbot.id),
                         )
             except UserNotParticipantError:
                 myu = await event.reply(_["call_5"])
